@@ -57,17 +57,21 @@ public class Client {
 	 * Adds an event listener containing the methods defined in the IRCEventListener class.
 	 *
 	 * @param listener The event listener.
+	 * @return Returns itself to allow method chaining.
 	 */
-	public void addEventListener(EventListener listener) {
+	public Client addEventListener(EventListener listener) {
 		listeners.add(listener);
+
+		return this;
 	}
 
 	/**
 	 * Attempt to create a socket and connect to the IRC network.
 	 *
 	 * @throws IRCException Will be thrown if an error occurs.
+	 * @return Returns itself to allow method chaining.
 	 */
-	public void connect() throws IRCException {
+	public Client connect() throws IRCException {
 		InputStream in;
 		OutputStream out;
 		try {
@@ -105,6 +109,8 @@ public class Client {
 		// Connect if everything looks good
 		sendLine(String.format("USER %s 8 * :%s", user, realname));
 		sendLine("NICK " + nick);
+
+		return this;
 	}
 
 	/**
@@ -112,8 +118,9 @@ public class Client {
 	 * channelJoined event to be fired.
 	 *
 	 * @param channel The channel name.
+	 * @return Returns itself to allow method chaining.
 	 */
-	public void join(String channel) {
+	public Client join(String channel) {
 		if (channel.charAt(0) != '#') {
 			channel = '#' + channel;
 		}
@@ -123,14 +130,17 @@ public class Client {
 		Channel chanInfo = new Channel();
 		chanInfo.name = channel;
 		channels.put(channel, chanInfo);
+
+		return this;
 	}
 
 	/**
 	 * Send a line of text over the socket. It will add \r\n, no need to manually add it.
 	 *
 	 * @param line  text to send.
+	 * @return Returns itself to allow method chaining.
 	 */
-	public void sendLine(String line) {
+	public Client sendLine(String line) {
 		pout.write(line + "\r\n");
 		pout.flush();
 
@@ -138,6 +148,8 @@ public class Client {
 		for (EventListener listener : listeners) {
 			listener.lineSent(line);
 		}
+
+		return this;
 	}
 
 	/**
@@ -146,11 +158,15 @@ public class Client {
 	 * @param nick Nickname to use.
 	 * @param user User / ident to use.
 	 * @param realname Real name to use.
+	 *
+	 * @return Returns itself to allow method chaining.
 	 */
-	public void setUserInfo(String nick, String user, String realname) {
+	public Client setUserInfo(String nick, String user, String realname) {
 		this.nick = nick;
 		this.user = user;
 		this.realname = realname;
+
+		return this;
 	}
 
 	/**
@@ -158,8 +174,10 @@ public class Client {
 	 *
 	 * @param line The received line.
 	 * @throws IRCException Rarely throws this; just on nick already taken.
+	 *
+	 * @return Returns itself to allow method chaining.
 	 */
-	private void handleNewLine(String line) throws IRCException {
+	private Client handleNewLine(String line) throws IRCException {
 		if (!connected) {
 			// Connected
 			if (line.contains("004")) {
@@ -234,5 +252,7 @@ public class Client {
 		for (EventListener listener : listeners) {
 			listener.lineReceived(line);
 		}
+
+		return this;
 	}
 }

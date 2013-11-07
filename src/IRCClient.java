@@ -31,9 +31,9 @@ public class IRCClient {
 		frame.setVisible(true);
 
 
-		irc.Client connection = new irc.Client("irc.freenode.net");
-		connection.addEventListener(new IRCClientHandler());
-		connection.setUserInfo("callum-test", "callum", "Callum Macrae");
+		irc.Client connection = new irc.Client("irc.freenode.net")
+				.addEventListener(new IRCClientHandler())
+				.setUserInfo("callum-test", "callum", "Callum Macrae");
 
 		try {
 			connection.connect();
