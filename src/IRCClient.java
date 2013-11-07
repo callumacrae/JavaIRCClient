@@ -31,49 +31,13 @@ public class IRCClient {
 		frame.setVisible(true);
 
 
-		IRC connection = new IRC("irc.freenode.net");
+		irc.Client connection = new irc.Client("irc.freenode.net");
+		connection.addEventListener(new IRCClientHandler());
 		connection.setUserInfo("callum-test", "callum", "Callum Macrae");
-
-		connection.addEventListener(new IRCEventListener() {
-			IRC connection;
-
-			@Override
-			public void connected(IRC connection) {
-				System.out.println("Connected!");
-				this.connection = connection;
-
-				connection.join("#webdevrefinery");
-			}
-
-			@Override
-			public void disconnected() {
-				System.out.println("Disconnected :-(");
-			}
-
-			@Override
-			public void lineSent(String line) {
-				System.out.println("Sent: " + line);
-			}
-
-			@Override
-			public void lineReceived(String line) {
-				System.out.println("Received: " + line);
-			}
-
-			@Override
-			public void messageReceived(String channel, IRCUser user, String message) {
-
-			}
-
-			@Override
-			public void channelJoined(IRCChannel channel) {
-				System.out.println(channel);
-			}
-		});
 
 		try {
 			connection.connect();
-		} catch (IRCException e) {
+		} catch (irc.IRCException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}

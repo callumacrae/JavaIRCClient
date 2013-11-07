@@ -1,3 +1,5 @@
+package irc;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -10,16 +12,16 @@ import java.util.List;
  * Author: Callum Macrae
  * Created: 06/11/2013 00:16
  */
-public class IRC {
+public class Client {
 
 	// Socket variables
 	private PrintWriter pout;
 	private BufferedReader bin;
 
 	// List variables
-	private List<IRCEventListener> listeners = new ArrayList<IRCEventListener>();
-	private HashMap<String, IRCChannel> channels = new HashMap<String, IRCChannel>();
-	private HashMap<String, IRCUser> users = new HashMap<String, IRCUser>();
+	private List<EventListener> listeners = new ArrayList<EventListener>();
+	private HashMap<String, Channel> channels = new HashMap<String, Channel>();
+	private HashMap<String, User> users = new HashMap<String, User>();
 
 	// Connection information variables
 	private String host;
@@ -36,7 +38,7 @@ public class IRC {
 	 *
 	 * @param host The host to connect to.
 	 */
-	public IRC(String host) {
+	public Client(String host) {
 		this(host, 6667);
 	}
 
@@ -46,7 +48,7 @@ public class IRC {
 	 * @param host The host to connect to.
 	 * @param port The port to connect to.
 	 */
-	public IRC(String host, int port) {
+	public Client(String host, int port) {
 		this.host = host;
 		this.port = port;
 	}
@@ -56,7 +58,7 @@ public class IRC {
 	 *
 	 * @param listener The event listener.
 	 */
-	public void addEventListener(IRCEventListener listener) {
+	public void addEventListener(EventListener listener) {
 		listeners.add(listener);
 	}
 
@@ -118,7 +120,7 @@ public class IRC {
 
 		sendLine("JOIN " + channel);
 
-		IRCChannel chanInfo = new IRCChannel();
+		Channel chanInfo = new Channel();
 		chanInfo.name = channel;
 		channels.put(channel, chanInfo);
 	}
@@ -133,7 +135,7 @@ public class IRC {
 		pout.flush();
 
 		// Fire lineSent event
-		for (IRCEventListener listener : listeners) {
+		for (EventListener listener : listeners) {
 			listener.lineSent(line);
 		}
 	}
@@ -164,11 +166,11 @@ public class IRC {
 				connected = true;
 
 				// Fire connected event
-				for (IRCEventListener listener : listeners) {
+				for (EventListener listener : listeners) {
 					listener.connected(this);
 				}
-			// Failed to connect; nick already taken
-			// @todo: Handle this better, perhaps with an alt nick
+				// Failed to connect; nick already taken
+				// @todo: Handle this better, perhaps with an alt nick
 			} else if (line.contains("433")) {
 				throw new IRCException("Nick already in use.");
 			}
@@ -179,14 +181,14 @@ public class IRC {
 			if (splitLine[0].equalsIgnoreCase("PING")) {
 				sendLine("PONG " + splitLine[1]);
 
-			// Channel topic on join
+				// Channel topic on join
 			} else if (splitLine[1].equals("332")) {
-				IRCChannel channel = channels.get(splitLine[3]);
+				Channel channel = channels.get(splitLine[3]);
 				channel.topic = line.substring(line.indexOf(":", 3));
 
-			// Channel users on join
+				// Channel users on join
 			} else if (splitLine[1].equals("353")) {
-				IRCChannel channel = channels.get(splitLine[4]);
+				Channel channel = channels.get(splitLine[4]);
 				String[] nicks = line.substring(line.indexOf(":", 3)).split(" ");
 
 				for (String nick : nicks) {
@@ -199,15 +201,15 @@ public class IRC {
 						nick = nick.substring(1);
 					}
 
-					IRCUser user;
+					User user;
 
 					// If user already exists, get user object
 					if (users.containsKey(nick)) {
 						user = users.get(nick);
 
-					// If user isn't known, create user object
+						// If user isn't known, create user object
 					} else {
-						user = new IRCUser();
+						user = new User();
 						users.put(nick, user);
 						user.nick = nick;
 					}
@@ -216,70 +218,21 @@ public class IRC {
 					channel.users.add(user);
 				}
 
-			// Joined channel
+				// Joined channel
 			} else if (splitLine[1].equals("366")) {
-				IRCChannel channel = channels.get(splitLine[3]);
+				Channel channel = channels.get(splitLine[3]);
 				channel.joined = true;
 
 				// Fire channelJoined event
-				for (IRCEventListener listener : listeners) {
+				for (EventListener listener : listeners) {
 					listener.channelJoined(channel);
 				}
 			}
 		}
 
 		// Fire lineReceived event
-		for (IRCEventListener listener : listeners) {
+		for (EventListener listener : listeners) {
 			listener.lineReceived(line);
 		}
 	}
-}
-
-/**
- * IRCListener interface to be used when giving an class to the addEventListener() method.
- *
- * Not all methods are called yet, WIP.
- */
-interface IRCEventListener {
-	public void connected(IRC connection);
-	public void disconnected();
-
-	public void lineSent(String line);
-	public void lineReceived(String line);
-
-	public void channelJoined(IRCChannel channel);
-	public void messageReceived(String channel, IRCUser user, String message);
-}
-
-/**
- * Exception class to be used by the IRC library.
- */
-class IRCException extends Exception {
-	public IRCException(String message) {
-		super(message);
-	}
-}
-
-/**
- * Class to represent individual users.
- *
- * One object per user per network, not one object per user per channel.
- */
-class IRCUser {
-	public String nick;
-	public String user;
-	public String host;
-
-	ArrayList<IRCChannel> channels = new ArrayList<IRCChannel>();
-}
-
-/**
- * Class to represent channels.
- */
-class IRCChannel {
-	public String topic;
-	public String name;
-	ArrayList<IRCUser> users = new ArrayList<IRCUser>();
-
-	public boolean joined = false;
 }
