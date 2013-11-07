@@ -14,9 +14,6 @@ import java.util.List;
 public class IRC {
 
 	// Socket variables
-	private Socket socket;
-	private InputStream in;
-	private OutputStream out;
 	private PrintWriter pout;
 	private BufferedReader bin;
 
@@ -70,8 +67,10 @@ public class IRC {
 	 * @throws IRCException Will be thrown if an error occurs.
 	 */
 	public void connect() throws IRCException {
+		InputStream in;
+		OutputStream out;
 		try {
-			socket = new Socket(host, port);
+			Socket socket = new Socket(host, port);
 			in = socket.getInputStream();
 			out = socket.getOutputStream();
 		} catch (IOException e) {
@@ -195,6 +194,7 @@ public class IRC {
 					char priv = ' ';
 
 					// Nick "@callumacrae" separates to '@' and "callumacrae" (defaults to ' ')
+					// @todo: Reimplement this
 					if (nick.matches("^[@+]")) {
 						priv = nick.charAt(0);
 						nick = nick.substring(1);
@@ -212,8 +212,7 @@ public class IRC {
 						user.nick = nick;
 					}
 
-					user.channels.add(priv + channel.name);
-
+					user.channels.add(channel);
 					channel.users.add(user);
 				}
 
@@ -272,8 +271,7 @@ class IRCUser {
 	public String host;
 
 	// This cannot be an array of IRCChannels, because recursion is bad
-	// @todo: Is recursion bad?
-	ArrayList<String> channels = new ArrayList<String>();
+	ArrayList<IRCChannel> channels = new ArrayList<IRCChannel>();
 }
 
 /**
