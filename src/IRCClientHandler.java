@@ -1,18 +1,29 @@
+import irc.*;
+import javax.swing.*;
+
 /**
  * Created with IntelliJ IDEA.
  * Project: IRCClient
  * Author: Callum Macrae
  * Created: 07/11/2013 15:31
  */
-public class IRCClientHandler implements irc.EventListener {
-	irc.Client connection;
+public class IRCClientHandler implements EventListener {
+	private Client client;
+	private DefaultListModel channels, content;
+	private JFrame frame;
+
+	public IRCClientHandler(DefaultListModel channels, DefaultListModel content, JFrame frame) {
+		this.channels = channels;
+		this.content = content;
+		this.frame = frame;
+	}
 
 	@Override
-	public void connected(irc.Client connection) {
+	public void connected(Client client) {
 		System.out.println("Connected!");
-		this.connection = connection;
+		this.client = client;
 
-		connection.join("#webdevrefinery");
+		client.join("#webdevrefinery");
 	}
 
 	@Override
@@ -31,12 +42,12 @@ public class IRCClientHandler implements irc.EventListener {
 	}
 
 	@Override
-	public void messageReceived(String channel, irc.User user, String message) {
+	public void messageReceived(String channel, User user, String message) {
 
 	}
 
 	@Override
-	public void channelJoined(irc.Channel channel) {
+	public void channelJoined(Channel channel) {
 		System.out.println(channel);
 	}
 }
