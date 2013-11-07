@@ -187,8 +187,9 @@ public class Client {
 				for (EventListener listener : listeners) {
 					listener.connected(this);
 				}
-				// Failed to connect; nick already taken
-				// @todo: Handle this better, perhaps with an alt nick
+
+			// Failed to connect; nick already taken
+			// @todo: Handle this better, perhaps with an alt nick
 			} else if (line.contains("433")) {
 				throw new IRCException("Nick already in use.");
 			}
@@ -199,12 +200,12 @@ public class Client {
 			if (splitLine[0].equalsIgnoreCase("PING")) {
 				sendLine("PONG " + splitLine[1]);
 
-				// Channel topic on join
+			// Channel topic on join
 			} else if (splitLine[1].equals("332")) {
 				Channel channel = channels.get(splitLine[3]);
 				channel.topic = line.substring(line.indexOf(":", 3));
 
-				// Channel users on join
+			// Channel users on join
 			} else if (splitLine[1].equals("353")) {
 				Channel channel = channels.get(splitLine[4]);
 				String[] nicks = line.substring(line.indexOf(":", 3)).split(" ");
@@ -225,7 +226,7 @@ public class Client {
 					if (users.containsKey(nick)) {
 						user = users.get(nick);
 
-						// If user isn't known, create user object
+					// If user isn't known, create user object
 					} else {
 						user = new User();
 						users.put(nick, user);
@@ -236,7 +237,7 @@ public class Client {
 					channel.users.add(user);
 				}
 
-				// Joined channel
+			// Joined channel
 			} else if (splitLine[1].equals("366")) {
 				Channel channel = channels.get(splitLine[3]);
 				channel.joined = true;
