@@ -62,7 +62,7 @@ public class IRCClient {
 
 			@Override
 			public void messageReceived(String channel, IRCUser user, String message) {
-				//To change body of implemented methods use File | Settings | File Templates.
+
 			}
 
 			@Override

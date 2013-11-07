@@ -208,6 +208,7 @@ public class IRC {
 					// If user isn't known, create user object
 					} else {
 						user = new IRCUser();
+						users.put(nick, user);
 						user.nick = nick;
 					}
 
@@ -269,7 +270,6 @@ class IRCUser {
 	public String user;
 	public String host;
 
-	// This cannot be an array of IRCChannels, because recursion is bad
 	ArrayList<IRCChannel> channels = new ArrayList<IRCChannel>();
 }
 
