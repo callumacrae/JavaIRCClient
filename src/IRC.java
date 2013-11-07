@@ -182,7 +182,7 @@ public class IRC {
 				sendLine("PONG " + splitLine[1]);
 
 			// Channel topic on join
-			} else if (splitLine[1].equals("322")) {
+			} else if (splitLine[1].equals("332")) {
 				IRCChannel channel = channels.get(splitLine[3]);
 				channel.topic = line.substring(line.indexOf(":", 3));
 
@@ -202,23 +202,19 @@ public class IRC {
 
 					IRCUser user;
 
-					// If user is already known, add the channel to their list
+					// If user already exists, get user object
 					if (users.containsKey(nick)) {
 						user = users.get(nick);
-						user.channels = Arrays.copyOf(user.channels, user.channels.length + 1);
-						user.channels[user.channels.length] = priv + channel.name;
 
-					// If user isn't known, create them with only this channel.
+					// If user isn't known, create user object
 					} else {
 						user = new IRCUser();
 						user.nick = nick;
-						user.channels = new String[1];
-						user.channels[0] = priv + channel.name;
 					}
 
-					// Increase channel.users length by one and add IRCUser to it.
-					channel.users = Arrays.copyOf(channel.users, channel.users.length + 1);
-					channel.users[channel.users.length] = user;
+					user.channels.add(priv + channel.name);
+
+					channel.users.add(user);
 				}
 
 			// Joined channel
@@ -277,7 +273,7 @@ class IRCUser {
 
 	// This cannot be an array of IRCChannels, because recursion is bad
 	// @todo: Is recursion bad?
-	public String[] channels;
+	ArrayList<String> channels = new ArrayList<String>();
 }
 
 /**
@@ -286,7 +282,7 @@ class IRCUser {
 class IRCChannel {
 	public String topic;
 	public String name;
-	public IRCUser[] users;
+	ArrayList<IRCUser> users = new ArrayList<IRCUser>();
 
 	public boolean joined = false;
 }
