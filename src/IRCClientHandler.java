@@ -48,6 +48,6 @@ public class IRCClientHandler implements EventListener {
 
 	@Override
 	public void channelJoined(Channel channel) {
-		System.out.println(channel);
+		channel.sendMessage("This is a test. I blame callumacrae.");
 	}
 }

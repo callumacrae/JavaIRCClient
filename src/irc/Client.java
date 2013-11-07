@@ -107,8 +107,8 @@ public class Client {
 		}
 
 		// Connect if everything looks good
-		sendLine(String.format("USER %s 8 * :%s", user, realname));
-		sendLine("NICK " + nick);
+		sendRaw(String.format("USER %s 8 * :%s", user, realname));
+		sendRaw("NICK " + nick);
 
 		return this;
 	}
@@ -125,9 +125,9 @@ public class Client {
 			channel = '#' + channel;
 		}
 
-		sendLine("JOIN " + channel);
+		sendRaw("JOIN " + channel);
 
-		Channel chanInfo = new Channel();
+		Channel chanInfo = new Channel(this);
 		chanInfo.name = channel;
 		channels.put(channel, chanInfo);
 
@@ -140,7 +140,8 @@ public class Client {
 	 * @param line  text to send.
 	 * @return Returns itself to allow method chaining.
 	 */
-	public Client sendLine(String line) {
+	// @todo: Make private, eventually
+	public Client sendRaw(String line) {
 		pout.write(line + "\r\n");
 		pout.flush();
 
@@ -148,6 +149,43 @@ public class Client {
 		for (EventListener listener : listeners) {
 			listener.lineSent(line);
 		}
+
+		return this;
+	}
+
+	/**
+	 * Send a message to a channel.
+	 *
+	 * @param channel Channel object representing the channel to send the message to.
+	 * @param message The message to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendMessage(Channel channel, String message) {
+		sendMessage(channel.name, message);
+		return this;
+	}
+
+	/**
+	 * Send a message to a user.
+	 *
+	 * @param user User object representing the user to send the message to.
+	 * @param message The message to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendMessage(User user, String message) {
+		sendMessage(user.nick, message);
+		return this;
+	}
+
+	/**
+	 * Send a message to a channel or user.
+	 *
+	 * @param destination The channel or user to send to.
+	 * @param message The message to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendMessage(String destination, String message) {
+		sendRaw(String.format("PRIVMSG %s :%s", destination, message));
 
 		return this;
 	}
@@ -198,7 +236,7 @@ public class Client {
 
 			// Handle PINGs
 			if (splitLine[0].equalsIgnoreCase("PING")) {
-				sendLine("PONG " + splitLine[1]);
+				sendRaw("PONG " + splitLine[1]);
 
 			// Channel topic on join
 			} else if (splitLine[1].equals("332")) {
@@ -228,7 +266,7 @@ public class Client {
 
 					// If user isn't known, create user object
 					} else {
-						user = new User();
+						user = new User(this);
 						users.put(nick, user);
 						user.nick = nick;
 					}
