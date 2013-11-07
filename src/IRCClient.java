@@ -39,7 +39,6 @@ public class IRCClient {
 		IRC connection = new IRC("irc.freenode.net");
 		connection.setUserInfo("callum-test", "callum", "Callum Macrae");
 
-		// @todo: Use `this`, not an anonymous class.
 		connection.addEventListener(new IRCEventListener() {
 			IRC connection;
 
