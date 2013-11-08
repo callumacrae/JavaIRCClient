@@ -16,6 +16,7 @@ import java.util.List;
 public class Client {
 
 	// Socket variables
+	private Socket socket;
 	private PrintWriter pout;
 	private BufferedReader bin;
 
@@ -30,6 +31,8 @@ public class Client {
 	private String user;
 	private String nick;
 	private String realname;
+
+	private String defaultQuitMessage = "$user$";
 
 	// Miscellaneous variables
 	private boolean connected = false;
@@ -78,7 +81,7 @@ public class Client {
 		InputStream in;
 		OutputStream out;
 		try {
-			Socket socket = new Socket(host, port);
+			socket = new Socket(host, port);
 			in = socket.getInputStream();
 			out = socket.getOutputStream();
 		} catch (IOException e) {
@@ -194,6 +197,17 @@ public class Client {
 	}
 
 	/**
+	 * Sets the default quit message.
+	 *
+	 * @param message The message to set as default.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client setDefaultQuitMessage(String message) {
+		defaultQuitMessage = message;
+		return this;
+	}
+
+	/**
 	 * Set user info ready for connection.
 	 *
 	 * @param nick Nickname to use.
@@ -230,6 +244,38 @@ public class Client {
 	 */
 	public Client switchTo(String destination) {
 		this.currentDestination = destination;
+		return this;
+	}
+
+	/**
+	 * Close the IRC connection using a default quit message.
+	 *
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client quit() {
+		quit(defaultQuitMessage.replace("$user$", nick));
+		return this;
+	}
+
+	/**
+	 * Close the IRC connection.
+	 *
+	 * @param message Quit message to use.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client quit(String message) {
+		sendRaw("QUIT :" + message);
+		try {
+			socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Fire disconnected event
+		for (EventListener listener : listeners) {
+			listener.disconnected();
+		}
+
 		return this;
 	}
 

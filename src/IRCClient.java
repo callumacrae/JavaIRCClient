@@ -39,9 +39,10 @@ public class IRCClient {
 
 
 		// Set up the client
-		Client client = new Client("irc.freenode.net")
+		final Client client = new Client("irc.freenode.net")
 				.addEventListener(new ReceivedHandler(channels, content, frame))
-				.setUserInfo("callum-test", "callum", "Callum Macrae");
+				.setUserInfo("callum-test", "callum", "Callum Macrae")
+				.setDefaultQuitMessage("Test quit message ($user$)");
 
 		// Connect
 		try {
@@ -50,6 +51,13 @@ public class IRCClient {
 			e.printStackTrace();
 			System.exit(0);
 		}
+
+		// Quit properly on shutdown
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				client.quit();
+			}
+		});
 
 		// Finish setting up the input
 		input.requestFocus();
