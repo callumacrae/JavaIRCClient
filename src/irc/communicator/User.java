@@ -19,6 +19,9 @@ public class User extends Communicator {
 		super(client);
 	}
 
+	/**
+	 * @return The user's nick.
+	 */
 	@Override
 	public String getName() {
 		return nick;

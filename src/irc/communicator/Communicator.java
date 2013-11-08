@@ -3,10 +3,8 @@ package irc.communicator;
 import irc.Client;
 
 /**
- * Created with IntelliJ IDEA.
- * Project: IRCClient
- * Author: Callum Macrae
- * Created: 08/11/2013 11:52
+ * Class to represent things that can be communicated with such as users and
+ * channels. irc.User and irc.Channel both extend from this.
  */
 public abstract class Communicator {
 
@@ -16,6 +14,12 @@ public abstract class Communicator {
 		this.client = client;
 	}
 
+	/**
+	 * Should return how to send a message to the Communicator (so, the nick
+	 * of a user or the name of a channel).
+	 *
+	 * @return Where to send a message to.
+	 */
 	public abstract String getName();
 
 	/**
@@ -31,6 +35,13 @@ public abstract class Communicator {
 		return this;
 	}
 
+	/**
+	 * Switches to the user or channel.
+	 *
+	 * Facade method: calls client.sendMessage for the destination.
+	 *
+	 * @return Returns itself to allow method chaining.
+	 */
 	public Communicator switchTo() {
 		client.switchTo(this);
 		return this;

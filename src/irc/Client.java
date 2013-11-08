@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * Project: IRCClient
- * Author: Callum Macrae
- * Created: 06/11/2013 00:16
+ * An IRC library.
+ *
+ * @author Callum Macrae (callum@macr.ae)
+ * @since 06/11/2013 00:16
  */
 public class Client {
 
@@ -56,7 +56,8 @@ public class Client {
 	}
 
 	/**
-	 * Adds an event listener containing the methods defined in the IRCEventListener class.
+	 * Adds an event listener containing the methods defined in the
+	 * IRCEventListener class.
 	 *
 	 * @param listener The event listener.
 	 * @return Returns itself to allow method chaining.
@@ -116,8 +117,8 @@ public class Client {
 	}
 
 	/**
-	 * Join a channel. Doesn't return the IRCChannel object because it probably isn't populated yet; wait for the
-	 * channelJoined event to be fired.
+	 * Join a channel. Doesn't return the IRCChannel object because it probably
+	 * isn't populated yet; wait for the channelJoined event to be fired.
 	 *
 	 * @param channel The channel nick.
 	 * @return Returns itself to allow method chaining.
@@ -137,9 +138,10 @@ public class Client {
 	}
 
 	/**
-	 * Send a line of text over the socket. It will add \r\n, no need to manually add it.
+	 * Send a line of text over the socket. It will add \r\n, no need to
+	 * manually add it.
 	 *
-	 * @param line  text to send.
+	 * @param line Text to send.
 	 * @return Returns itself to allow method chaining.
 	 */
 	// @todo: Make private, eventually
@@ -158,7 +160,8 @@ public class Client {
 	/**
 	 * Send a message to a Communicator object (a user or channel).
 	 *
-	 * @param destination Communicator object representing the destination to send the message to.
+	 * @param destination Communicator object representing the destination
+	 *                    to send the message to.
 	 * @param message The message to send.
 	 * @return Returns itself to allow method chaining.
 	 */
@@ -211,7 +214,8 @@ public class Client {
 	/**
 	 * Switches to the specified user or channel.
 	 *
-	 * @param destination The Communicator object for the user or channel to switch to.
+	 * @param destination The Communicator object for the user or channel to
+	 *                    switch to.
 	 * @return Returns itself to allow method chaining.
 	 */
 	public Client switchTo(Communicator destination) {
@@ -231,7 +235,8 @@ public class Client {
 	}
 
 	/**
-	 * Private method to handle new lines from the IRC server. Basically just exists so that less indents are used.
+	 * Private method to handle new lines from the IRC server. Basically
+	 * just exists so that less indents are used.
 	 *
 	 * @param line The received line.
 	 * @throws IRCException Rarely throws this; just on nick already taken.

@@ -17,6 +17,9 @@ public class Channel extends Communicator {
 		super(client);
 	}
 
+	/**
+	 * @return The channel name.
+	 */
 	@Override
 	public String getName() {
 		return name;
