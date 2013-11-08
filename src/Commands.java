@@ -9,4 +9,5 @@ public enum Commands {
 	QUERY,
 	QUIT,
 	QUOTE,
+	SAY,
 }

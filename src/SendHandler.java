@@ -55,9 +55,13 @@ public class SendHandler implements ActionListener {
 				case QUOTE:
 					client.sendRaw(text.substring(7));
 					break;
+
+				case SAY:
+					client.sendMessage(text.substring(5));
+					break;
 			}
 		} else {
-			client.sendMessage(text);
+			client.sendMessage(text.charAt(0) == '/' ? text.substring(1) : text);
 		}
 	}
 }
