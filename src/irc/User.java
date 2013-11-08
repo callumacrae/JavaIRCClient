@@ -7,35 +7,19 @@ import java.util.ArrayList;
  *
  * One object per user per network, not one object per user per channel.
  */
-public class User {
+public class User extends Communicator {
 	public String nick;
 	public String user;
 	public String host;
 
 	ArrayList<Channel> channels = new ArrayList<Channel>();
 
-	private Client client;
-
 	public User(Client client) {
-		this.client = client;
+		super(client);
 	}
 
-	/**
-	 * Send a message to the user.
-	 *
-	 * Facade method: calls client.sendMessage for the user.
-	 *
-	 * @param message The message to send.
-	 * @return Returns itself to allow method chaining.
-	 */
-	// @todo: Put this in another class and extend from it.
-	public User sendMessage(String message) {
-		client.sendMessage(this, message);
-		return this;
-	}
-
-	public User switchTo() {
-		client.switchTo(this);
-		return this;
+	@Override
+	public String getName() {
+		return nick;
 	}
 }

@@ -118,7 +118,7 @@ public class Client {
 	 * Join a channel. Doesn't return the IRCChannel object because it probably isn't populated yet; wait for the
 	 * channelJoined event to be fired.
 	 *
-	 * @param channel The channel name.
+	 * @param channel The channel nick.
 	 * @return Returns itself to allow method chaining.
 	 */
 	public Client join(String channel) {
@@ -155,26 +155,14 @@ public class Client {
 	}
 
 	/**
-	 * Send a message to a channel.
+	 * Send a message to a Communicator object (a user or channel).
 	 *
-	 * @param channel Channel object representing the channel to send the message to.
+	 * @param destination Communicator object representing the destination to send the message to.
 	 * @param message The message to send.
 	 * @return Returns itself to allow method chaining.
 	 */
-	public Client sendMessage(Channel channel, String message) {
-		sendMessage(channel.name, message);
-		return this;
-	}
-
-	/**
-	 * Send a message to a user.
-	 *
-	 * @param user User object representing the user to send the message to.
-	 * @param message The message to send.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client sendMessage(User user, String message) {
-		sendMessage(user.nick, message);
+	public Client sendMessage(Communicator destination, String message) {
+		sendMessage(destination.getName(), message);
 		return this;
 	}
 
@@ -207,7 +195,7 @@ public class Client {
 	 *
 	 * @param nick Nickname to use.
 	 * @param user User / ident to use.
-	 * @param realname Real name to use.
+	 * @param realname Real nick to use.
 	 *
 	 * @return Returns itself to allow method chaining.
 	 */
@@ -220,31 +208,20 @@ public class Client {
 	}
 
 	/**
-	 * Switches to the specified channel.
+	 * Switches to the specified user or channel.
 	 *
-	 * @param channel The Channel object for the channel to switch to.
+	 * @param destination The Communicator object for the user or channel to switch to.
 	 * @return Returns itself to allow method chaining.
 	 */
-	public Client switchTo(Channel channel) {
-		switchTo(channel.name);
-		return this;
-	}
-
-	/**
-	 * Switches to the specified user.
-	 *
-	 * @param user The User object for the channel to switch to.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client switchTo(User user) {
-		switchTo(user.nick);
+	public Client switchTo(Communicator destination) {
+		switchTo(destination.getName());
 		return this;
 	}
 
 	/**
 	 * Switches to the specified user or channel.
 	 *
-	 * @param destination The nick of the user or the channel name.
+	 * @param destination The nick of the user or the channel nick.
 	 * @return Returns itself to allow method chaining.
 	 */
 	public Client switchTo(String destination) {
