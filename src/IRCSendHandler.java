@@ -9,11 +9,11 @@ import java.awt.event.ActionListener;
  * Author: Callum Macrae
  * Created: 08/11/2013 11:33
  */
-public class IRCSentHandler implements ActionListener {
+public class IRCSendHandler implements ActionListener {
 	private JTextField input;
 	private Client client;
 
-	public IRCSentHandler(JTextField input, Client client) {
+	public IRCSendHandler(JTextField input, Client client) {
 		this.input = input;
 		this.client = client;
 	}

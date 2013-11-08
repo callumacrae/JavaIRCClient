@@ -1,8 +1,6 @@
 import irc.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * A simple IRC client.
@@ -55,6 +53,6 @@ public class IRCClient {
 
 		// Finish setting up the input
 		input.requestFocus();
-		input.addActionListener(new IRCSentHandler(input, client));
+		input.addActionListener(new IRCSendHandler(input, client));
 	}
 }
