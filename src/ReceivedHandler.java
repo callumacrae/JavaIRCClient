@@ -48,4 +48,9 @@ public class ReceivedHandler implements EventListener {
 	public void channelJoined(Channel channel) {
 		channel.switchTo();
 	}
+
+	@Override
+	public void nickChanged(User user, String oldnick, String newnick, boolean us) {
+
+	}
 }

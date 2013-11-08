@@ -120,6 +120,34 @@ public class Client {
 		return this;
 	}
 
+	public User getUser(String userString) {
+		userString = userString.substring(1);
+		String[] splitString = userString.split("[!@]");
+
+		User user;
+
+		if (users.containsKey(splitString[0])) {
+			user = users.get(splitString[0]);
+
+			if (user.user == null) {
+				user.user = splitString[1];
+			}
+			if (user.host == null) {
+				user.host = splitString[2];
+			}
+		} else {
+			// This code is unlikely to ever be ran, actually.
+			user = new User(this);
+			user.nick = splitString[0];
+			user.user = splitString[1];
+			user.host = splitString[2];
+
+			users.put(user.nick, user);
+		}
+
+		return user;
+	}
+
 	/**
 	 * Join a channel. Doesn't return the IRCChannel object because it probably
 	 * isn't populated yet; wait for the channelJoined event to be fired.
@@ -205,6 +233,17 @@ public class Client {
 	 */
 	public Client setDefaultQuitMessage(String message) {
 		defaultQuitMessage = message;
+		return this;
+	}
+
+	/**
+	 * Changes the users' nick. Changing the nick property will be handled when then server confirms the nick change.
+	 *
+	 * @param nick The nick to change to.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client setNick(String nick) {
+		sendRaw("NICK " + nick);
 		return this;
 	}
 
@@ -379,6 +418,23 @@ public class Client {
 				for (EventListener listener : listeners) {
 					listener.channelJoined(channel);
 				}
+			} else if (splitLine[1].equals("NICK")) {
+				User user = getUser(splitLine[0]);
+				String newnick = splitLine[2].substring(1);
+
+				// Special case if it is us
+				if (user.nick.equals(nick)) {
+					nick = newnick;
+				}
+
+				// Fire channelJoined event. Warning, fired BEFORE user.nick change.
+				for (EventListener listener : listeners) {
+					listener.nickChanged(user, user.nick, newnick, nick.equals(newnick));
+				}
+
+				users.remove(user.nick);
+				users.put(newnick, user);
+				user.nick = newnick;
 			}
 		}
 

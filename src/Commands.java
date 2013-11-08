@@ -4,6 +4,9 @@
 public enum Commands {
 	EXIT,
 	JOIN,
+	MSG,
+	NICK,
+	QUERY,
 	QUIT,
 	QUOTE,
 }

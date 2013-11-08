@@ -32,8 +32,17 @@ public class SendHandler implements ActionListener {
 					client.join(splitText[1]);
 					break;
 
-				case EXIT:
+				case MSG:
+				case QUERY:
+					client.sendMessage(splitText[1], text.substring(splitText[1].length() + 6));
+					break;
+
+				case NICK:
+					client.setNick(splitText[1]);
+					break;
+
 				case QUIT:
+				case EXIT:
 					if (splitText.length > 1) {
 						client.quit(text.substring(6));
 					} else {
