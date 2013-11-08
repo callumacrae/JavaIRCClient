@@ -144,7 +144,6 @@ public class Client {
 	 * @param line Text to send.
 	 * @return Returns itself to allow method chaining.
 	 */
-	// @todo: Make private, eventually
 	public Client sendRaw(String line) {
 		pout.write(line + "\r\n");
 		pout.flush();

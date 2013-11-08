@@ -27,8 +27,14 @@ public class IRCSendHandler implements ActionListener {
 			String[] splitText = text.split(" ");
 			String command = splitText[0].substring(1);
 
-			if (command.equals("join")) {
-				client.join(splitText[1]);
+			switch (Commands.valueOf(command.toUpperCase())) {
+				case JOIN:
+					client.join(splitText[1]);
+					break;
+
+				case QUOTE:
+					client.sendRaw(text.substring(7));
+					break;
 			}
 		} else {
 			client.sendMessage(text);
