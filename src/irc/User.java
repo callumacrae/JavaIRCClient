@@ -33,4 +33,9 @@ public class User {
 		client.sendMessage(this, message);
 		return this;
 	}
+
+	public User switchTo() {
+		client.switchTo(this);
+		return this;
+	}
 }

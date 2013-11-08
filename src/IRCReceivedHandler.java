@@ -7,12 +7,12 @@ import javax.swing.*;
  * Author: Callum Macrae
  * Created: 07/11/2013 15:31
  */
-public class IRCClientHandler implements EventListener {
+public class IRCReceivedHandler implements EventListener {
 	private Client client;
 	private DefaultListModel channels, content;
 	private JFrame frame;
 
-	public IRCClientHandler(DefaultListModel channels, DefaultListModel content, JFrame frame) {
+	public IRCReceivedHandler(DefaultListModel channels, DefaultListModel content, JFrame frame) {
 		this.channels = channels;
 		this.content = content;
 		this.frame = frame;
@@ -22,13 +22,10 @@ public class IRCClientHandler implements EventListener {
 	public void connected(Client client) {
 		System.out.println("Connected!");
 		this.client = client;
-
-		client.join("#webdevrefinery");
 	}
 
 	@Override
 	public void disconnected() {
-		System.out.println("Disconnected :-(");
 	}
 
 	@Override
@@ -48,6 +45,6 @@ public class IRCClientHandler implements EventListener {
 
 	@Override
 	public void channelJoined(Channel channel) {
-		channel.sendMessage("This is a test. I blame callumacrae.");
+		channel.switchTo();
 	}
 }

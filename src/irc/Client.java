@@ -32,6 +32,7 @@ public class Client {
 
 	// Miscellaneous variables
 	private boolean connected = false;
+	private String currentDestination;
 
 	/**
 	 * Server info is specified on object creation with optional port.
@@ -178,6 +179,17 @@ public class Client {
 	}
 
 	/**
+	 * Send a message to the current destination (the currently open window).
+	 *
+	 * @param message The message to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendMessage(String message) {
+		sendMessage(currentDestination, message);
+		return this;
+	}
+
+	/**
 	 * Send a message to a channel or user.
 	 *
 	 * @param destination The channel or user to send to.
@@ -204,6 +216,39 @@ public class Client {
 		this.user = user;
 		this.realname = realname;
 
+		return this;
+	}
+
+	/**
+	 * Switches to the specified channel.
+	 *
+	 * @param channel The Channel object for the channel to switch to.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client switchTo(Channel channel) {
+		switchTo(channel.name);
+		return this;
+	}
+
+	/**
+	 * Switches to the specified user.
+	 *
+	 * @param user The User object for the channel to switch to.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client switchTo(User user) {
+		switchTo(user.nick);
+		return this;
+	}
+
+	/**
+	 * Switches to the specified user or channel.
+	 *
+	 * @param destination The nick of the user or the channel name.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client switchTo(String destination) {
+		this.currentDestination = destination;
 		return this;
 	}
 

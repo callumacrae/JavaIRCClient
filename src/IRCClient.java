@@ -1,6 +1,8 @@
 import irc.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * A simple IRC client.
@@ -23,7 +25,7 @@ public class IRCClient {
 		Component contentPane = new JScrollPane(new JList(content));
 		frame.add(contentPane, BorderLayout.CENTER);
 
-		JTextField input = new JTextField();
+		final JTextField input = new JTextField();
 		frame.add(input, BorderLayout.SOUTH);
 
 		frame.setSize(800, 500);
@@ -32,15 +34,18 @@ public class IRCClient {
 		frame.setVisible(true);
 
 
-		Client connection = new Client("irc.freenode.net")
-				.addEventListener(new IRCClientHandler(channels, content, frame))
+		Client client = new Client("irc.freenode.net")
+				.addEventListener(new IRCReceivedHandler(channels, content, frame))
 				.setUserInfo("callum-test", "callum", "Callum Macrae");
 
 		try {
-			connection.connect();
+			client.connect();
 		} catch (IRCException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
+
+		input.requestFocus();
+		input.addActionListener(new IRCSentHandler(input, client));
 	}
 }

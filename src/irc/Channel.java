@@ -31,4 +31,9 @@ public class Channel {
 		client.sendMessage(this, message);
 		return this;
 	}
+
+	public Channel switchTo() {
+		client.switchTo(this);
+		return this;
+	}
 }
