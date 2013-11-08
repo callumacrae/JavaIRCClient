@@ -24,6 +24,7 @@ public class Client {
 	private List<EventListener> listeners = new ArrayList<EventListener>();
 	private HashMap<String, Channel> channels = new HashMap<String, Channel>();
 	private HashMap<String, User> users = new HashMap<String, User>();
+	private HashMap<String, String> serverInfo = new HashMap<String, String>();
 
 	// Connection information variables
 	private String host;
@@ -299,10 +300,31 @@ public class Client {
 					listener.connected(this);
 				}
 
+			// Get server info
+			} else if (line.contains("005")) {
+				String[] splitLine = line.split(" ");
+				for (int i = 0; i < splitLine.length; i++) {
+					if (splitLine[i].contains("=")) {
+						String[] splitSplit = splitLine[i].split("=");
+						if (splitSplit.length == 2) {
+							serverInfo.put(splitSplit[0], splitSplit[1]);
+						}
+					}
+				}
+
+			// Failed to connect; bad nickname
+			} else if (line.contains("432")) {
+				throw new IRCException("Erroneous Nickname returned by server");
+
 			// Failed to connect; nick already taken
-			// @todo: Handle this better, perhaps with an alt nick
 			} else if (line.contains("433")) {
-				throw new IRCException("Nick already in use.");
+				int maxLength = serverInfo.containsKey("NICKLEN") ? Integer.parseInt(serverInfo.get("NICKLEN")) : 16;
+				if (nick.length() >= maxLength) {
+					throw new IRCException("Nick already in use");
+				}
+
+				nick += "_";
+				sendRaw("NICK " + nick);
 			}
 		} else {
 			String[] splitLine = line.split(" ");
