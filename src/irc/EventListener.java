@@ -1,4 +1,5 @@
 package irc;
+import irc.communicator.*;
 
 /**
  * IRCListener interface to be used when giving an class to the addEventListener() method.

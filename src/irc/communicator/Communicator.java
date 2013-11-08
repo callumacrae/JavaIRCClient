@@ -1,4 +1,6 @@
-package irc;
+package irc.communicator;
+
+import irc.Client;
 
 /**
  * Created with IntelliJ IDEA.

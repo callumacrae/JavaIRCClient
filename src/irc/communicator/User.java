@@ -1,5 +1,6 @@
-package irc;
+package irc.communicator;
 
+import irc.Client;
 import java.util.ArrayList;
 
 /**
@@ -12,7 +13,7 @@ public class User extends Communicator {
 	public String user;
 	public String host;
 
-	ArrayList<Channel> channels = new ArrayList<Channel>();
+	public ArrayList<Channel> channels = new ArrayList<Channel>();
 
 	public User(Client client) {
 		super(client);

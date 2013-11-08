@@ -1,4 +1,5 @@
 import irc.*;
+import irc.communicator.*;
 import javax.swing.*;
 
 /**

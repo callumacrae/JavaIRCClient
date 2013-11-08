@@ -1,4 +1,5 @@
 package irc;
+import irc.communicator.*;
 
 import java.io.*;
 import java.net.Socket;

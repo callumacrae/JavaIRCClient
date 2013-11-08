@@ -1,5 +1,6 @@
-package irc;
+package irc.communicator;
 
+import irc.Client;
 import java.util.ArrayList;
 
 /**
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 public class Channel extends Communicator {
 	public String topic;
 	public String name;
-	ArrayList<User> users = new ArrayList<User>();
+	public ArrayList<User> users = new ArrayList<User>();
 
 	public boolean joined = false;
 
