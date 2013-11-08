@@ -8,12 +8,12 @@ import javax.swing.*;
  * Author: Callum Macrae
  * Created: 07/11/2013 15:31
  */
-public class IRCReceivedHandler implements EventListener {
+public class ReceivedHandler implements EventListener {
 	private Client client;
 	private DefaultListModel channels, content;
 	private JFrame frame;
 
-	public IRCReceivedHandler(DefaultListModel channels, DefaultListModel content, JFrame frame) {
+	public ReceivedHandler(DefaultListModel channels, DefaultListModel content, JFrame frame) {
 		this.channels = channels;
 		this.content = content;
 		this.frame = frame;

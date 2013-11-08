@@ -40,7 +40,7 @@ public class IRCClient {
 
 		// Set up the client
 		Client client = new Client("irc.freenode.net")
-				.addEventListener(new IRCReceivedHandler(channels, content, frame))
+				.addEventListener(new ReceivedHandler(channels, content, frame))
 				.setUserInfo("callum-test", "callum", "Callum Macrae");
 
 		// Connect
@@ -53,6 +53,6 @@ public class IRCClient {
 
 		// Finish setting up the input
 		input.requestFocus();
-		input.addActionListener(new IRCSendHandler(input, client));
+		input.addActionListener(new SendHandler(input, client));
 	}
 }
