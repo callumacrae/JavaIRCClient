@@ -1,6 +1,7 @@
 import irc.*;
 import irc.communicator.*;
 import javax.swing.*;
+import java.util.HashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,12 +11,15 @@ import javax.swing.*;
  */
 public class ReceivedHandler implements EventListener {
 	private Client client;
-	private DefaultListModel channels, content;
+	private DefaultListModel channels;
+	private HashMap<String, DefaultListModel> content;
+	private JList contentJList;
 	private JFrame frame;
 
-	public ReceivedHandler(DefaultListModel channels, DefaultListModel content, JFrame frame) {
+	public ReceivedHandler(DefaultListModel channels, HashMap content, JList contentJList, JFrame frame) {
 		this.channels = channels;
 		this.content = content;
+		this.contentJList = contentJList;
 		this.frame = frame;
 	}
 
@@ -31,22 +35,38 @@ public class ReceivedHandler implements EventListener {
 
 	@Override
 	public void lineSent(String line) {
-		System.out.println("Sent: " + line);
+//		System.out.println("Sent: " + line);
+		DefaultListModel console = content.get("console");
+		console.addElement(line);
 	}
 
 	@Override
 	public void lineReceived(String line) {
-		System.out.println("Received: " + line);
+//		System.out.println("Received: " + line);
+		DefaultListModel console = content.get("console");
+		console.addElement(line);
 	}
 
 	@Override
 	public void messageReceived(String channel, User user, String message) {
+		content.get(channel).addElement(String.format("<%s> %s", user.nick, message));
+	}
 
+	@Override
+	public void messageSent(String destination, String message) {
+		content.get(destination).addElement(String.format("<%s> %s", client.getNick(), message));
 	}
 
 	@Override
 	public void channelJoined(Channel channel) {
+		channels.addElement(channel.name);
+		content.put(channel.name, new DefaultListModel());
 		channel.switchTo();
+	}
+
+	@Override
+	public void channelSwitched(String channel) {
+		contentJList.setModel(content.get(channel));
 	}
 
 	@Override

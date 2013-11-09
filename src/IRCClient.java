@@ -1,6 +1,9 @@
 import irc.*;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.util.HashMap;
 
 /**
  * A simple IRC client.
@@ -17,14 +20,19 @@ public class IRCClient {
 		frame.setLayout(new BorderLayout());
 
 		// Create the channels pane
-		DefaultListModel channels = new DefaultListModel();
-		Component channelsPane = new JScrollPane(new JList(channels));
+		final DefaultListModel channels = new DefaultListModel();
+		channels.addElement("console");
+		JList channelsJList = new JList(channels);
+		Component channelsPane = new JScrollPane(channelsJList);
 		channelsPane.setPreferredSize(new Dimension(200, 0));
 		frame.add(channelsPane, BorderLayout.WEST);
 
 		// Create the content area
-		DefaultListModel content = new DefaultListModel();
-		Component contentPane = new JScrollPane(new JList(content));
+		HashMap<String, DefaultListModel> content = new HashMap<String, DefaultListModel>();
+		DefaultListModel console = new DefaultListModel();
+		content.put("console", console);
+		JList contentJList = new JList(console);
+		Component contentPane = new JScrollPane(contentJList);
 		frame.add(contentPane, BorderLayout.CENTER);
 
 		// Create the input
@@ -40,7 +48,7 @@ public class IRCClient {
 
 		// Set up the client
 		final Client client = new Client("irc.freenode.net")
-				.addEventListener(new ReceivedHandler(channels, content, frame))
+				.addEventListener(new ReceivedHandler(channels, content, contentJList, frame))
 				.setUserInfo("callum-test", "callum", "Callum Macrae")
 				.setDefaultQuitMessage("Test quit message ($user$)");
 
@@ -62,5 +70,21 @@ public class IRCClient {
 		// Finish setting up the input
 		input.requestFocus();
 		input.addActionListener(new SendHandler(input, client));
+
+
+		// Set up the channel event listener
+		channelsJList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				ListSelectionModel cList = (ListSelectionModel) e.getSource();
+
+				if (!cList.isSelectionEmpty() && cList.getMinSelectionIndex() == cList.getMaxSelectionIndex()) {
+					String channel = (String) channels.getElementAt(cList.getMinSelectionIndex());
+					client.switchTo(channel);
+				}
+
+				cList.clearSelection();
+			}
+		});
 	}
 }

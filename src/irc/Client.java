@@ -37,7 +37,7 @@ public class Client {
 
 	// Miscellaneous variables
 	private boolean connected = false;
-	private String currentDestination;
+	public String currentDestination;
 
 	/**
 	 * Server info is specified on object creation with optional port.
@@ -120,6 +120,20 @@ public class Client {
 		return this;
 	}
 
+	/**
+	 * Gets the nick of our user.
+	 * @return The nick.
+	 */
+	public String getNick() {
+		return nick;
+	}
+
+	/**
+	 * Gets a user object from the user string (:nick!ident@host).
+	 *
+	 * @param userString User string to get / retrieve user data from.
+	 * @return User object representing user.
+	 */
 	public User getUser(String userString) {
 		userString = userString.substring(1);
 		String[] splitString = userString.split("[!@]");
@@ -222,6 +236,11 @@ public class Client {
 	public Client sendMessage(String destination, String message) {
 		sendRaw(String.format("PRIVMSG %s :%s", destination, message));
 
+		// Fire messageSent event
+		for (EventListener listener : listeners) {
+			listener.messageSent(destination, message);
+		}
+
 		return this;
 	}
 
@@ -284,6 +303,12 @@ public class Client {
 	 */
 	public Client switchTo(String destination) {
 		this.currentDestination = destination;
+
+		// Fire channelSwitched event
+		for (EventListener listener : listeners) {
+			listener.channelSwitched(destination);
+		}
+
 		return this;
 	}
 
@@ -435,6 +460,15 @@ public class Client {
 				users.remove(user.nick);
 				users.put(newnick, user);
 				user.nick = newnick;
+			} else if (splitLine[1].equals("PRIVMSG")) {
+				User user = getUser(splitLine[0]);
+				String channel = splitLine[2];
+				String message = line.substring(line.indexOf(":", 2) + 1);
+
+				// Fire messageReceived event
+				for (EventListener listener : listeners) {
+					listener.messageReceived(channel, user, message);
+				}
 			}
 		}
 
