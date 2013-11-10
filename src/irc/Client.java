@@ -393,89 +393,115 @@ public class Client {
 		} else {
 			String[] splitLine = line.split(" ");
 
-			// Handle PINGs
-			if (splitLine[0].equalsIgnoreCase("PING")) {
-				sendRaw("PONG " + splitLine[1]);
+			String command = splitLine[1].toUpperCase();
+			boolean commandIsNumber = true;
+			try {
+				Integer.parseInt(command);
+			} catch(NumberFormatException e) {
+				commandIsNumber = false;
+			}
 
-			// Channel topic on join
-			} else if (splitLine[1].equals("332")) {
-				Channel channel = channels.get(splitLine[3]);
-				channel.topic = line.substring(line.indexOf(":", 3));
+			command = (commandIsNumber ? "N" : "") + command;
 
-			// Channel users on join
-			} else if (splitLine[1].equals("353")) {
-				Channel channel = channels.get(splitLine[4]);
-				String[] nicks = line.substring(line.indexOf(":", 3)).split(" ");
+			Commands switchBy = Commands.CNF;
+			for (Commands value : Commands.values()) {
+				if (value.name().equalsIgnoreCase(command)) {
+					switchBy = value;
+					break;
+				}
+			}
 
-				for (String nick : nicks) {
-					char priv = ' ';
+			Channel channel;
+			User user;
+			switch (switchBy) {
+				case PING:
+					sendRaw("PONG " + splitLine[1]);
+					break;
 
-					// Nick "@callumacrae" separates to '@' and "callumacrae" (defaults to ' ')
-					// @todo: Reimplement this
-					if (nick.matches("^[@+]")) {
-						priv = nick.charAt(0);
-						nick = nick.substring(1);
+				case N332:
+					channel = channels.get(splitLine[3]);
+					channel.topic = line.substring(line.indexOf(":", 3));
+					break;
+
+				case N353:
+					channel = channels.get(splitLine[4]);
+					String[] nicks = line.substring(line.indexOf(":", 3)).split(" ");
+
+					for (String nick : nicks) {
+						char priv = ' ';
+
+						// Nick "@callumacrae" separates to '@' and "callumacrae" (defaults to ' ')
+						// @todo: Reimplement this
+						if (nick.matches("^[@+]")) {
+							priv = nick.charAt(0);
+							nick = nick.substring(1);
+						}
+
+						// If user already exists, get user object
+						if (users.containsKey(nick)) {
+							user = users.get(nick);
+
+							// If user isn't known, create user object
+						} else {
+							user = new User(this);
+							users.put(nick, user);
+							user.nick = nick;
+						}
+
+						user.channels.add(channel);
+						channel.users.add(user);
+					}
+					break;
+
+				case N366:
+					channel = channels.get(splitLine[3]);
+					channel.joined = true;
+
+					// Fire channelJoined event
+					for (EventListener listener : listeners) {
+						listener.channelJoined(channel);
+					}
+					break;
+
+				case NICK:
+					user = getUser(splitLine[0]);
+					String newnick = splitLine[2].substring(1);
+
+					// Special case if it is us
+					if (user.nick.equals(nick)) {
+						nick = newnick;
 					}
 
-					User user;
+					// Fire channelJoined event. Warning, fired BEFORE user.nick change.
+					for (EventListener listener : listeners) {
+						listener.nickChanged(user, user.nick, newnick, nick.equals(newnick));
+					}
 
-					// If user already exists, get user object
-					if (users.containsKey(nick)) {
-						user = users.get(nick);
+					users.remove(user.nick);
+					users.put(newnick, user);
+					user.nick = newnick;
+					break;
 
-					// If user isn't known, create user object
+				case PRIVMSG:
+					user = getUser(splitLine[0]);
+					String channelName = splitLine[2];
+					String message = line.substring(line.indexOf(":", 2) + 1);
+
+					if (channelName.equals(nick)) {
+						// Fire queryReceived event
+						for (EventListener listener : listeners) {
+							listener.queryReceived(user, message);
+						}
 					} else {
-						user = new User(this);
-						users.put(nick, user);
-						user.nick = nick;
+						// Fire messageReceived event
+						for (EventListener listener : listeners) {
+							listener.messageReceived(channelName, user, message);
+						}
 					}
+					break;
 
-					user.channels.add(channel);
-					channel.users.add(user);
-				}
-
-			// Joined channel
-			} else if (splitLine[1].equals("366")) {
-				Channel channel = channels.get(splitLine[3]);
-				channel.joined = true;
-
-				// Fire channelJoined event
-				for (EventListener listener : listeners) {
-					listener.channelJoined(channel);
-				}
-			} else if (splitLine[1].equals("NICK")) {
-				User user = getUser(splitLine[0]);
-				String newnick = splitLine[2].substring(1);
-
-				// Special case if it is us
-				if (user.nick.equals(nick)) {
-					nick = newnick;
-				}
-
-				// Fire channelJoined event. Warning, fired BEFORE user.nick change.
-				for (EventListener listener : listeners) {
-					listener.nickChanged(user, user.nick, newnick, nick.equals(newnick));
-				}
-
-				users.remove(user.nick);
-				users.put(newnick, user);
-				user.nick = newnick;
-			} else if (splitLine[1].equals("PRIVMSG")) {
-				User user = getUser(splitLine[0]);
-				String channel = splitLine[2];
-				String message = line.substring(line.indexOf(":", 2) + 1);
-
-				if (channel.equals(nick)) {
-					// Fire messageReceived event
-					for (EventListener listener : listeners) {
-						listener.queryReceived(user, message);
-					}
-				} else {
-					// Fire messageReceived event
-					for (EventListener listener : listeners) {
-						listener.messageReceived(channel, user, message);
-					}
-				}
+				default:
+					break;
 			}
 		}
 
