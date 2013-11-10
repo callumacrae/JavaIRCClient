@@ -118,8 +118,22 @@ public class ReceivedHandler implements EventListener {
 	@Override
 	public void channelJoined(Channel channel) {
 		channels.addElement(channel.name);
-		content.put(channel.name, new DefaultListModel());
+		DefaultListModel list = new DefaultListModel();
+		list.addElement(String.format("You have joined %s", channel.name));
+		content.put(channel.name, list);
 		channel.switchTo();
+	}
+
+	/**
+	 * Fired when another user joins a channel.
+	 *
+	 * @param channel Channel object representing the channel.
+	 * @param user User object representing the user.
+	 */
+	@Override
+	public void channelJoined(Channel channel, User user) {
+		DefaultListModel channelList = content.get(channel.name);
+		channelList.addElement(String.format("%s has joined %s", user.nick, channel.name));
 	}
 
 	/**

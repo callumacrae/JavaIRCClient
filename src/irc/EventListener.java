@@ -43,6 +43,14 @@ public interface EventListener {
 	public void channelJoined(Channel channel);
 
 	/**
+	 * Fired when another user joins a channel.
+	 *
+	 * @param channel Channel object representing the channel.
+	 * @param user User object representing the user.
+	 */
+	public void channelJoined(Channel channel, User user);
+
+	/**
 	 * Fired when the user switches channel. This shouldn't really be in the IRC package.
 	 * @param channel String containing channel name.
 	 */

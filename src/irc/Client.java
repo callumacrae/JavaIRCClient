@@ -463,6 +463,24 @@ public class Client {
 					}
 					break;
 
+				case JOIN:
+					user = getUser(splitLine[0]);
+					channel = channels.get(splitLine[2]);
+
+					// If our user, fire on N366
+					if (user.nick.equals(nick)) {
+						break;
+					}
+
+					channel.users.add(user);
+					user.channels.add(channel);
+
+					// Fire channelJoined event
+					for (EventListener listener : listeners) {
+						listener.channelJoined(channel, user);
+					}
+					break;
+
 				case NICK:
 					user = getUser(splitLine[0]);
 					String newnick = splitLine[2].substring(1);
