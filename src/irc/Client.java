@@ -465,9 +465,16 @@ public class Client {
 				String channel = splitLine[2];
 				String message = line.substring(line.indexOf(":", 2) + 1);
 
-				// Fire messageReceived event
-				for (EventListener listener : listeners) {
-					listener.messageReceived(channel, user, message);
+				if (channel.equals(nick)) {
+					// Fire messageReceived event
+					for (EventListener listener : listeners) {
+						listener.queryReceived(user, message);
+					}
+				} else {
+					// Fire messageReceived event
+					for (EventListener listener : listeners) {
+						listener.messageReceived(channel, user, message);
+					}
 				}
 			}
 		}

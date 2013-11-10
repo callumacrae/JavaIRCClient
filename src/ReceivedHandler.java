@@ -58,6 +58,22 @@ public class ReceivedHandler implements EventListener {
 	}
 
 	@Override
+	public void queryReceived(User user, String message) {
+		DefaultListModel query;
+		if (content.containsKey(user.nick)) {
+			query = content.get(user.nick);
+		} else {
+			channels.addElement(user.nick);
+			query = new DefaultListModel();
+			content.put(user.nick, query);
+		}
+
+		query.addElement(String.format("<%s> %s", user.nick, message));
+
+		user.switchTo();
+	}
+
+	@Override
 	public void channelJoined(Channel channel) {
 		channels.addElement(channel.name);
 		content.put(channel.name, new DefaultListModel());

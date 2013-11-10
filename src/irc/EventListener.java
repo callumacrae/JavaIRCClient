@@ -18,6 +18,7 @@ public interface EventListener {
 	public void channelSwitched(String channel);
 	public void messageReceived(String channel, User user, String message);
 	public void messageSent(String destination, String message);
+	public void queryReceived(User user, String message);
 
 	// This is called BEFORE the users' nick is changed. Use oldnick and newnick, not user.nick.
 	public void nickChanged(User user, String oldnick, String newnick, boolean us);
