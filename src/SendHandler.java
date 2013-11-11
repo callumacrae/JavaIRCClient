@@ -27,7 +27,15 @@ public class SendHandler implements ActionListener {
 			String[] splitText = text.split(" ");
 			String command = splitText[0].substring(1);
 
-			switch (Commands.valueOf(command.toUpperCase())) {
+			Commands switchBy = Commands.CNF;
+			for (Commands value : Commands.values()) {
+				if (value.name().equalsIgnoreCase(command)) {
+					switchBy = value;
+					break;
+				}
+			}
+
+			switch (switchBy) {
 				case JOIN:
 					client.join(splitText[1]);
 					break;
@@ -74,6 +82,11 @@ public class SendHandler implements ActionListener {
 
 				case SAY:
 					client.sendMessage(text.substring(5));
+					break;
+
+				case CNF:
+				default:
+					System.out.println("Command not found: " + command);
 					break;
 			}
 		} else {
