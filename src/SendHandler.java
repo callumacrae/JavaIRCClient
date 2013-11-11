@@ -41,6 +41,22 @@ public class SendHandler implements ActionListener {
 					client.setNick(splitText[1]);
 					break;
 
+				case PART:
+					if (splitText.length == 1) {
+						// /part
+						client.part(client.currentDestination);
+					} else if (splitText[1].startsWith("#") && splitText.length == 2) {
+						// /part #channel
+						client.part(splitText[1]);
+					} else if (splitText[1].startsWith("#")) {
+						// /part #channel message here
+						client.part(splitText[1], text.substring(splitText[1].length() + 7));
+					} else {
+						// /part message here
+						client.part(client.currentDestination, text.substring(6));
+					}
+					break;
+
 				case QUIT:
 				case EXIT:
 					if (splitText.length > 1) {

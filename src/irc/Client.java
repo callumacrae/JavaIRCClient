@@ -34,6 +34,7 @@ public class Client {
 	private String realname;
 
 	private String defaultQuitMessage = "$user$";
+	private String defaultPartMessage = "$user$";
 
 	// Miscellaneous variables
 	private boolean connected = false;
@@ -245,6 +246,17 @@ public class Client {
 	}
 
 	/**
+	 * Sets the default part message.
+	 *
+	 * @param message The message to set as default.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client setDefaultPartMessage(String message) {
+		defaultPartMessage = message;
+		return this;
+	}
+
+	/**
 	 * Sets the default quit message.
 	 *
 	 * @param message The message to set as default.
@@ -309,6 +321,52 @@ public class Client {
 			listener.channelSwitched(destination);
 		}
 
+		return this;
+	}
+
+	/**
+	 * Parts the specified channel using a default part message.
+	 *
+	 * @param channel Channel object representing the channel to part.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client part(Channel channel) {
+		part(channel.name);
+		return this;
+	}
+
+	/**
+	 * Parts the specified channel using a default part message.
+	 *
+	 * @param channelName The name of the channel to part.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client part(String channelName) {
+		part(channelName, defaultPartMessage.replace("$user$", nick));
+		return this;
+	}
+
+	/**
+	 * Parts the specified channel using specified part message.
+	 *
+	 * @param channel Channel object representing the channel to part.
+	 * @param message The message to use as part message.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client part(Channel channel, String message) {
+		part(channel.name, message);
+		return this;
+	}
+
+	/**
+	 * Parts the specified channel using specified part message.
+	 *
+	 * @param channelName The name of the channel to part.
+	 * @param message The message to use as part message.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client part(String channelName, String message) {
+		sendRaw(String.format("PART %s :%s", channelName, message));
 		return this;
 	}
 
@@ -498,6 +556,31 @@ public class Client {
 					users.remove(user.nick);
 					users.put(newnick, user);
 					user.nick = newnick;
+					break;
+
+				case PART:
+					user = getUser(splitLine[0]);
+					channel = channels.get(splitLine[2]);
+
+					channel.users.remove(user);
+					user.channels.remove(channel);
+
+					// Fire channelParted event
+					if (user.nick.equals(nick)) {
+						for (EventListener listener : listeners) {
+							listener.channelParted(channel);
+						}
+					} else {
+						String partMessage = "";
+						if (line.contains("PART " + splitLine[2] + " :")) {
+							partMessage = line.substring(splitLine[0].length() + splitLine[2].length() + 8);
+						}
+
+						for (EventListener listener : listeners) {
+							listener.channelParted(channel, user, partMessage);
+						}
+					}
+
 					break;
 
 				case PRIVMSG:

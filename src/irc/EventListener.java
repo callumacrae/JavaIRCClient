@@ -51,6 +51,23 @@ public interface EventListener {
 	public void channelJoined(Channel channel, User user);
 
 	/**
+	 * Fired when a channel is parted (when the server sends the part stuff,
+	 * not when the user types /part).
+	 *
+	 * @param channel Channel object representing the channel.
+	 */
+	public void channelParted(Channel channel);
+
+	/**
+	 * Fired when another user parts a channel.
+	 *
+	 * @param channel Channel object representing the channel.
+	 * @param user User object representing the user.
+	 * @param partMessage The part message of the user (or "" if not specified).
+	 */
+	public void channelParted(Channel channel, User user, String partMessage);
+
+	/**
 	 * Fired when the user switches channel. This shouldn't really be in the IRC package.
 	 * @param channel String containing channel name.
 	 */

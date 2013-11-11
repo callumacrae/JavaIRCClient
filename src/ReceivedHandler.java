@@ -137,6 +137,41 @@ public class ReceivedHandler implements EventListener {
 	}
 
 	/**
+	 * Fired when a channel is parted (when the server sends the part stuff,
+	 * not when the user types /part).
+	 *
+	 * @param channel Channel object representing the channel.
+	 */
+	@Override
+	public void channelParted(Channel channel) {
+		channels.removeElement(channel.name);
+		content.remove(channel.name);
+
+		client.switchTo("console");
+	}
+
+	/**
+	 * Fired when another user parts a channel.
+	 *
+	 * @param channel Channel object representing the channel.
+	 * @param user User object representing the user.
+	 * @param partMessage The part message of the user (or "" if not specified).
+	 */
+	@Override
+	public void channelParted(Channel channel, User user, String partMessage) {
+		DefaultListModel channelList = content.get(channel.name);
+
+		String message;
+		if (partMessage.equals("")) {
+			message = String.format("%s has parted %s", user.nick, channel.name);
+		} else {
+			message = String.format("%s has parted %s (%s)", user.nick, channel.name, partMessage);
+		}
+
+		channelList.addElement(message);
+	}
+
+	/**
 	 * Fired when the user switches channel. This shouldn't really be in the IRC package.
 	 * @param channel String containing channel name.
 	 */

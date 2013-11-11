@@ -14,6 +14,7 @@ public enum Commands {
 	N353,
 	N366,
 	NICK,
+	PART,
 	PING,
 	PRIVMSG,
 	QUERY,
