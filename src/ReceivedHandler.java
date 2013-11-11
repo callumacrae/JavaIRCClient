@@ -217,4 +217,38 @@ public class ReceivedHandler implements EventListener {
 
 		user.switchTo();
 	}
+
+	/**
+	 * Fired when a user quits. It is called after userQuitPerChannel.
+	 *
+	 * @param user    User object of user who just quit.
+	 * @param message Quit message (or "" if not specified).
+	 */
+	@Override
+	public void userQuit(User user, String message) {
+		if (content.containsKey(user.nick)) {
+			content.remove(user.nick);
+			channels.removeElement(user.nick);
+		}
+	}
+
+	/**
+	 * Fired for each channel a user is in when the user quits. Is called before userQuit.
+	 *
+	 * @param user    User object of user who just quit.
+	 * @param channel Channel object of channel user was in.
+	 * @param message Quit message (or "" if not specified).
+	 */
+	@Override
+	public void userQuitPerChannel(User user, Channel channel, String message) {
+		DefaultListModel channelList = content.get(channel.name);
+
+		if (message.equals("")) {
+			message = String.format("%s has parted %s", user.nick, channel.name);
+		} else {
+			message = String.format("%s has parted %s (%s)", user.nick, channel.name, message);
+		}
+
+		channelList.addElement(message);
+	}
 }

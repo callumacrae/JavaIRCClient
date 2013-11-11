@@ -113,4 +113,21 @@ public interface EventListener {
 	 * @param message The message.
 	 */
 	public void queryReceived(User user, String message);
+
+	/**
+	 * Fired when a user quits. It is called after userQuitPerChannel.
+	 *
+	 * @param user    User object of user who just quit.
+	 * @param message Quit message (or "" if not specified).
+	 */
+	public void userQuit(User user, String message);
+
+	/**
+	 * Fired for each channel a user is in when the user quits. Is called before userQuit.
+	 *
+	 * @param user    User object of user who just quit.
+	 * @param channel Channel object of channel user was in.
+	 * @param message Quit message (or "" if not specified).
+	 */
+	public void userQuitPerChannel(User user, Channel channel, String message);
 }

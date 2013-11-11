@@ -610,6 +610,33 @@ public class Client {
 					}
 					break;
 
+				case QUIT:
+					user = getUser(splitLine[0]);
+
+					if (user.nick.equals(nick)) {
+						break;
+					}
+
+					String quitMessage = "";
+					if (line.contains("QUIT :")) {
+						quitMessage = line.substring(splitLine[0].length() + splitLine[2].length() + 8);
+					}
+
+					for (Channel chan : user.channels) {
+						chan.users.remove(user);
+
+						// Fire userQuitPerChannel event
+						for (EventListener listener : listeners) {
+							listener.userQuitPerChannel(user, chan, quitMessage);
+						}
+					}
+
+					// Fire userQuit event
+					for (EventListener listener : listeners) {
+						listener.userQuit(user, quitMessage);
+					}
+					break;
+
 				default:
 					break;
 			}
