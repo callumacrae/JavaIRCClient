@@ -192,6 +192,26 @@ public class ReceivedHandler implements EventListener {
 	 */
 	@Override
 	public void nickChanged(User user, String oldnick, String newnick, boolean us) {
+		String message;
+		if (us) {
+			message = String.format("You are now known as %s", newnick);
+		} else {
+			message = String.format("%s is now known as %s", oldnick, newnick);
+		}
 
+		for (Channel channel : user.channels) {
+			content.get(channel.name).addElement(message);
+		}
+
+		if (content.containsKey(oldnick)) {
+			DefaultListModel convo = content.get(oldnick);
+			convo.addElement(message);
+
+			content.remove(oldnick);
+			content.put(newnick, convo);
+
+			channels.removeElement(oldnick);
+			channels.addElement(newnick);
+		}
 	}
 }

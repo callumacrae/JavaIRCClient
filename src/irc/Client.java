@@ -417,6 +417,10 @@ public class Client {
 			if (line.contains("004")) {
 				connected = true;
 
+				User you = new User(this);
+				you.nick = nick;
+				users.put(nick, you);
+
 				// Fire connected event
 				for (EventListener listener : listeners) {
 					listener.connected(this);
@@ -512,8 +516,12 @@ public class Client {
 					break;
 
 				case N366:
+					user = users.get(nick);
 					channel = channels.get(splitLine[3]);
 					channel.joined = true;
+
+					channel.users.add(user);
+					user.channels.add(channel);
 
 					// Fire channelJoined event
 					for (EventListener listener : listeners) {
@@ -567,6 +575,8 @@ public class Client {
 
 					// Fire channelParted event
 					if (user.nick.equals(nick)) {
+						channel.joined = false;
+
 						for (EventListener listener : listeners) {
 							listener.channelParted(channel);
 						}
