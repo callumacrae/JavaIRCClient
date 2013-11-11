@@ -1,8 +1,15 @@
 import irc.*;
+import irc.communicator.Channel;
+
 import javax.swing.*;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 /**
@@ -26,6 +33,38 @@ public class IRCClient {
 		Component channelsPane = new JScrollPane(channelsJList);
 		channelsPane.setPreferredSize(new Dimension(200, 0));
 		frame.add(channelsPane, BorderLayout.WEST);
+
+		// Reorder channel list on contents change
+		channels.addListDataListener(new ListDataListener() {
+			public boolean running = false;
+
+			@Override
+			public void intervalAdded(ListDataEvent listDataEvent) {
+				if (!running) {
+					running = true;
+					sortChannelList(channels);
+					running = false;
+				}
+			}
+
+			@Override
+			public void intervalRemoved(ListDataEvent listDataEvent) {
+				if (!running) {
+					running = true;
+					sortChannelList(channels);
+					running = false;
+				}
+			}
+
+			@Override
+			public void contentsChanged(ListDataEvent listDataEvent) {
+				if (!running) {
+					running = true;
+					sortChannelList(channels);
+					running = false;
+				}
+			}
+		});
 
 		// Create the content area
 		HashMap<String, DefaultListModel> content = new HashMap<String, DefaultListModel>();
@@ -86,5 +125,30 @@ public class IRCClient {
 				cList.clearSelection();
 			}
 		});
+	}
+
+	public static void sortChannelList(DefaultListModel channels) {
+		ArrayList<String> channelArray = new ArrayList<String>();
+		for (int i = 0; i < channels.size(); i++) {
+			channelArray.add((String) channels.elementAt(i));
+		}
+
+		// Sort so that channels are above users (and console above everything).
+		Collections.sort(channelArray, new Comparator<String>() {
+			@Override
+			public int compare(String chan1, String chan2) {
+				if (chan1.equals("console") || (chan1.startsWith("#") && !chan2.startsWith("#"))) {
+					return -1;
+				}
+
+				return chan1.compareToIgnoreCase(chan2);
+			}
+		});
+
+		channels.clear();
+
+		for (String channelName : channelArray) {
+			channels.addElement(channelName);
+		}
 	}
 }
