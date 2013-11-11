@@ -80,11 +80,11 @@ public interface EventListener {
 	/**
 	 * Fired when a PRIVMSG is received from a channel.
 	 *
-	 * @param channel String containing channel name.
+	 * @param channel Channel object representing the channel.
 	 * @param user    User object of sender.
 	 * @param message The message.
 	 */
-	public void messageReceived(String channel, User user, String message);
+	public void messageReceived(Channel channel, User user, String message);
 
 	/**
 	 * Fired when a message is send to the server. Useful for logging.

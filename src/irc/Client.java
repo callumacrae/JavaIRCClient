@@ -594,7 +594,7 @@ public class Client {
 
 				case PRIVMSG:
 					user = getUser(splitLine[0]);
-					String channelName = splitLine[2];
+					String channelName = splitLine[2]; // Might not be a channel
 					String message = line.substring(line.indexOf(":", 2) + 1);
 
 					if (channelName.equals(nick)) {
@@ -603,9 +603,11 @@ public class Client {
 							listener.queryReceived(user, message);
 						}
 					} else {
+						channel = channels.get(channelName);
+
 						// Fire messageReceived event
 						for (EventListener listener : listeners) {
-							listener.messageReceived(channelName, user, message);
+							listener.messageReceived(channel, user, message);
 						}
 					}
 					break;

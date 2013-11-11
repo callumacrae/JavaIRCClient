@@ -141,13 +141,14 @@ public class ReceivedHandler implements EventListener {
 	/**
 	 * Fired when a PRIVMSG is received from a channel.
 	 *
-	 * @param channel String containing channel name.
+	 * @param channel Channel object representing the channel.
 	 * @param user    User object of sender.
 	 * @param message The message.
 	 */
 	@Override
-	public void messageReceived(String channel, User user, String message) {
-		content.get(channel).addElement(String.format("<%s> %s", user.nick, message));
+	public void messageReceived(Channel channel, User user, String message) {
+		DefaultListModel channelList = content.get(channel.name);
+		channelList.addElement(String.format("<%s> %s", user.nick, message));
 	}
 
 	/**
