@@ -76,8 +76,8 @@ public class Client {
 	/**
 	 * Attempt to create a socket and connect to the IRC network.
 	 *
-	 * @throws IRCException Will be thrown if an error occurs.
 	 * @return Returns itself to allow method chaining.
+	 * @throws IRCException Will be thrown if an error occurs.
 	 */
 	public Client connect() throws IRCException {
 		InputStream in;
@@ -123,10 +123,22 @@ public class Client {
 
 	/**
 	 * Gets the nick of our user.
+	 *
 	 * @return The nick.
 	 */
 	public String getNick() {
 		return nick;
+	}
+
+	/**
+	 * Changes the users' nick. Changing the nick property will be handled when then server confirms the nick change.
+	 *
+	 * @param nick The nick to change to.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client setNick(String nick) {
+		sendRaw("NICK " + nick);
+		return this;
 	}
 
 	/**
@@ -185,146 +197,6 @@ public class Client {
 	}
 
 	/**
-	 * Send a line of text over the socket. It will add \r\n, no need to
-	 * manually add it.
-	 *
-	 * @param line Text to send.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client sendRaw(String line) {
-		pout.write(line + "\r\n");
-		pout.flush();
-
-		// Fire lineSent event
-		for (EventListener listener : listeners) {
-			listener.lineSent(line);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Send a message to a Communicator object (a user or channel).
-	 *
-	 * @param destination Communicator object representing the destination
-	 *                    to send the message to.
-	 * @param message The message to send.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client sendMessage(Communicator destination, String message) {
-		sendMessage(destination.getName(), message);
-		return this;
-	}
-
-	/**
-	 * Send a message to the current destination (the currently open window).
-	 *
-	 * @param message The message to send.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client sendMessage(String message) {
-		sendMessage(currentDestination, message);
-		return this;
-	}
-
-	/**
-	 * Send a message to a channel or user.
-	 *
-	 * @param destination The channel or user to send to.
-	 * @param message The message to send.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client sendMessage(String destination, String message) {
-		sendRaw(String.format("PRIVMSG %s :%s", destination, message));
-
-		// Fire messageSent event
-		for (EventListener listener : listeners) {
-			listener.messageSent(destination, message);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Sets the default part message.
-	 *
-	 * @param message The message to set as default.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client setDefaultPartMessage(String message) {
-		defaultPartMessage = message;
-		return this;
-	}
-
-	/**
-	 * Sets the default quit message.
-	 *
-	 * @param message The message to set as default.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client setDefaultQuitMessage(String message) {
-		defaultQuitMessage = message;
-		return this;
-	}
-
-	/**
-	 * Changes the users' nick. Changing the nick property will be handled when then server confirms the nick change.
-	 *
-	 * @param nick The nick to change to.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client setNick(String nick) {
-		sendRaw("NICK " + nick);
-		return this;
-	}
-
-	/**
-	 * Set user info ready for connection.
-	 *
-	 * @param nick Nickname to use.
-	 * @param user User / ident to use.
-	 * @param realname Real nick to use.
-	 *
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client setUserInfo(String nick, String user, String realname) {
-		this.nick = nick;
-		this.user = user;
-		this.realname = realname;
-
-		return this;
-	}
-
-	/**
-	 * Switches to the specified user or channel.
-	 *
-	 * @param destination The Communicator object for the user or channel to
-	 *                    switch to.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client switchTo(Communicator destination) {
-		switchTo(destination.getName());
-		return this;
-	}
-
-	/**
-	 * Switches to the specified user or channel.
-	 *
-	 * @param destination The nick of the user or the channel nick.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client switchTo(String destination) {
-		this.currentDestination = destination;
-
-		// Fire channelSwitched event
-		for (EventListener listener : listeners) {
-			listener.channelSwitched(destination);
-		}
-
-		return this;
-	}
-
-	/**
 	 * Parts the specified channel using a default part message.
 	 *
 	 * @param channel Channel object representing the channel to part.
@@ -362,7 +234,7 @@ public class Client {
 	 * Parts the specified channel using specified part message.
 	 *
 	 * @param channelName The name of the channel to part.
-	 * @param message The message to use as part message.
+	 * @param message     The message to use as part message.
 	 * @return Returns itself to allow method chaining.
 	 */
 	public Client part(String channelName, String message) {
@@ -403,13 +275,140 @@ public class Client {
 	}
 
 	/**
+	 * Send a message to a Communicator object (a user or channel).
+	 *
+	 * @param destination Communicator object representing the destination
+	 *                    to send the message to.
+	 * @param message     The message to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendMessage(Communicator destination, String message) {
+		sendMessage(destination.getName(), message);
+		return this;
+	}
+
+	/**
+	 * Send a message to the current destination (the currently open window).
+	 *
+	 * @param message The message to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendMessage(String message) {
+		sendMessage(currentDestination, message);
+		return this;
+	}
+
+	/**
+	 * Send a message to a channel or user.
+	 *
+	 * @param destination The channel or user to send to.
+	 * @param message     The message to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendMessage(String destination, String message) {
+		sendRaw(String.format("PRIVMSG %s :%s", destination, message));
+
+		// Fire messageSent event
+		for (EventListener listener : listeners) {
+			listener.messageSent(destination, message);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Send a line of text over the socket. It will add \r\n, no need to
+	 * manually add it.
+	 *
+	 * @param line Text to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendRaw(String line) {
+		pout.write(line + "\r\n");
+		pout.flush();
+
+		// Fire lineSent event
+		for (EventListener listener : listeners) {
+			listener.lineSent(line);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Sets the default part message.
+	 *
+	 * @param message The message to set as default.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client setDefaultPartMessage(String message) {
+		defaultPartMessage = message;
+		return this;
+	}
+
+	/**
+	 * Sets the default quit message.
+	 *
+	 * @param message The message to set as default.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client setDefaultQuitMessage(String message) {
+		defaultQuitMessage = message;
+		return this;
+	}
+
+	/**
+	 * Set user info ready for connection.
+	 *
+	 * @param nick     Nickname to use.
+	 * @param user     User / ident to use.
+	 * @param realname Real nick to use.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client setUserInfo(String nick, String user, String realname) {
+		this.nick = nick;
+		this.user = user;
+		this.realname = realname;
+
+		return this;
+	}
+
+	/**
+	 * Switches to the specified user or channel.
+	 *
+	 * @param destination The Communicator object for the user or channel to
+	 *                    switch to.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client switchTo(Communicator destination) {
+		switchTo(destination.getName());
+		return this;
+	}
+
+	/**
+	 * Switches to the specified user or channel.
+	 *
+	 * @param destination The nick of the user or the channel nick.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client switchTo(String destination) {
+		this.currentDestination = destination;
+
+		// Fire channelSwitched event
+		for (EventListener listener : listeners) {
+			listener.channelSwitched(destination);
+		}
+
+		return this;
+	}
+
+	/**
 	 * Private method to handle new lines from the IRC server. Basically
 	 * just exists so that less indents are used.
 	 *
 	 * @param line The received line.
-	 * @throws IRCException Rarely throws this; just on nick already taken.
-	 *
 	 * @return Returns itself to allow method chaining.
+	 * @throws IRCException Rarely throws this; just on nick already taken.
 	 */
 	private Client handleNewLine(String line) throws IRCException {
 		if (!connected) {
@@ -459,7 +458,7 @@ public class Client {
 			boolean commandIsNumber = true;
 			try {
 				Integer.parseInt(command);
-			} catch(NumberFormatException e) {
+			} catch (NumberFormatException e) {
 				commandIsNumber = false;
 			}
 
@@ -503,7 +502,7 @@ public class Client {
 						if (users.containsKey(nick)) {
 							user = users.get(nick);
 
-							// If user isn't known, create user object
+						// If user isn't known, create user object
 						} else {
 							user = new User(this);
 							users.put(nick, user);
