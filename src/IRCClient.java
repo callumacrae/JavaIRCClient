@@ -127,6 +127,12 @@ public class IRCClient {
 		});
 	}
 
+	/**
+	 * Sorts the channel list by IRC order - "console", followed by channels
+	 * in alphabetical order, followed by queries in alphabetical order.
+	 *
+	 * @param channels The DefaultListModel to reorder.
+	 */
 	public static void sortChannelList(DefaultListModel channels) {
 		ArrayList<String> channelArray = new ArrayList<String>();
 		for (int i = 0; i < channels.size(); i++) {
