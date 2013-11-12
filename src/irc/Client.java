@@ -103,6 +103,7 @@ public class Client {
 				try {
 					while ((line = bin.readLine()) != null) {
 						handleNewLine(line);
+						Thread.sleep(1);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
