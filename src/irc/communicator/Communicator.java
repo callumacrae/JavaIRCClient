@@ -23,6 +23,19 @@ public abstract class Communicator {
 	public abstract String getName();
 
 	/**
+	 * Send an action to the user or channel.
+	 *
+	 * Facade method: calls client.sendAction for the destination.
+	 *
+	 * @param action The action to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Communicator sendAction(String action) {
+		client.sendAction(this, action);
+		return this;
+	}
+
+	/**
 	 * Send a message to the user or channel.
 	 *
 	 * Facade method: calls client.sendMessage for the destination.

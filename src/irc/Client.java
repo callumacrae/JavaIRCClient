@@ -276,6 +276,48 @@ public class Client {
 	}
 
 	/**
+	 * Send an action to a Communicator object (a user or channel).
+	 *
+	 * @param destination Communicator object representing the destination
+	 *                    to send the action to.
+	 * @param action     The action to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendAction(Communicator destination, String action) {
+		sendAction(destination.getName(), action);
+		return this;
+	}
+
+	/**
+	 * Send an action to the current destination (the currently open window).
+	 *
+	 * @param action The action to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendAction(String action) {
+		sendAction(currentDestination, action);
+		return this;
+	}
+
+	/**
+	 * Send an action to a channel or user.
+	 *
+	 * @param destination The channel or user to send to.
+	 * @param action     The action to send.
+	 * @return Returns itself to allow method chaining.
+	 */
+	public Client sendAction(String destination, String action) {
+		sendRaw(String.format("PRIVMSG %s :\u0001ACTION %s\u0001", destination, action));
+
+		// Fire actionSent event
+		for (EventListener listener : listeners) {
+			listener.actionSent(destination, action);
+		}
+
+		return this;
+	}
+
+	/**
 	 * Send a message to a Communicator object (a user or channel).
 	 *
 	 * @param destination Communicator object representing the destination
@@ -599,16 +641,36 @@ public class Client {
 					String message = line.substring(line.indexOf(":", 2) + 1);
 
 					if (channelName.equals(nick)) {
-						// Fire queryReceived event
-						for (EventListener listener : listeners) {
-							listener.queryReceived(user, message);
+						// See whether ACTION or normal PRIVMSG
+						if (message.startsWith("\u0001ACTION") && message.endsWith("\u0001")) {
+							message = message.substring(8, message.length() - 1);
+
+							// Fire queryActionReceived event
+							for (EventListener listener : listeners) {
+								listener.queryActionReceived(user, message);
+							}
+						} else {
+							// Fire queryReceived event
+							for (EventListener listener : listeners) {
+								listener.queryReceived(user, message);
+							}
 						}
 					} else {
 						channel = channels.get(channelName);
 
-						// Fire messageReceived event
-						for (EventListener listener : listeners) {
-							listener.messageReceived(channel, user, message);
+						// See whether ACTION or normal PRIVMSG
+						if (message.startsWith("\u0001ACTION") && message.endsWith("\u0001")) {
+							message = message.substring(8, message.length() - 1);
+
+							// Fire actionReceived event
+							for (EventListener listener : listeners) {
+								listener.actionReceived(channel, user, message);
+							}
+						} else {
+							// Fire messageReceived event
+							for (EventListener listener : listeners) {
+								listener.messageReceived(channel, user, message);
+							}
 						}
 					}
 					break;

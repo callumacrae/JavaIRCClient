@@ -27,6 +27,30 @@ public class ReceivedHandler implements EventListener {
 	}
 
 	/**
+	 * Fired when an action is received from a channel.
+	 *
+	 * @param channel Channel object representing the channel.
+	 * @param user    User object of sender.
+	 * @param action The action.
+	 */
+	@Override
+	public void actionReceived(Channel channel, User user, String action) {
+		DefaultListModel channelList = content.get(channel.name);
+		channelList.addElement(String.format("* %s %s", user.nick, action));
+	}
+
+	/**
+	 * Fired when an action is send to the server. Useful for logging.
+	 *
+	 * @param destination String of nick or channel name.
+	 * @param action      The action.
+	 */
+	@Override
+	public void actionSent(String destination, String action) {
+		content.get(destination).addElement(String.format("* %s %s", client.getNick(), action));
+	}
+
+	/**
 	 * Fired when a channel is joined (when the server sends the join stuff,
 	 * not when the user types /join).
 	 *
@@ -204,6 +228,28 @@ public class ReceivedHandler implements EventListener {
 			channels.removeElement(oldnick);
 			channels.addElement(newnick);
 		}
+	}
+
+	/**
+	 * Fired when an action is received in a query from a user.
+	 *
+	 * @param user    User object of sender.
+	 * @param action The action.
+	 */
+	@Override
+	public void queryActionReceived(User user, String action) {
+		DefaultListModel query;
+		if (content.containsKey(user.nick)) {
+			query = content.get(user.nick);
+		} else {
+			channels.addElement(user.nick);
+			query = new DefaultListModel();
+			content.put(user.nick, query);
+		}
+
+		query.addElement(String.format("* %s %s", user.nick, action));
+
+		user.switchTo();
 	}
 
 	/**

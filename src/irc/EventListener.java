@@ -11,6 +11,23 @@ import irc.communicator.User;
  */
 public interface EventListener {
 	/**
+	 * Fired when an action is received from a channel.
+	 *
+	 * @param channel Channel object representing the channel.
+	 * @param user    User object of sender.
+	 * @param action The action.
+	 */
+	public void actionReceived(Channel channel, User user, String action);
+
+	/**
+	 * Fired when a message is send to the server. Useful for logging.
+	 *
+	 * @param destination String of nick or channel name.
+	 * @param action      The message.
+	 */
+	public void actionSent(String destination, String action);
+
+	/**
 	 * Fired when a channel is joined (when the server sends the join stuff,
 	 * not when the user types /join).
 	 *
@@ -105,6 +122,14 @@ public interface EventListener {
 	 * @param us      True if us.
 	 */
 	public void nickChanged(User user, String oldnick, String newnick, boolean us);
+
+	/**
+	 * Fired when an action is received in a query from a user.
+	 *
+	 * @param user    User object of sender.
+	 * @param action The action.
+	 */
+	public void queryActionReceived(User user, String action);
 
 	/**
 	 * Fired when a PRIVMSG is received from a user.

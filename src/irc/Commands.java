@@ -7,9 +7,11 @@ public enum Commands {
 	CNF, // Special
 
 
+	ACTION,
 	CS,
 	EXIT,
 	JOIN,
+	ME,
 	MSG,
 	N332,
 	N353,
