@@ -53,7 +53,7 @@ public class SendHandler implements ActionListener {
 
 				case MSG:
 				case QUERY:
-					int offset = splitText[0].length() + splitText[1].length() + 3;
+					int offset = splitText[0].length() + splitText[1].length() + 2;
 					client.sendMessage(splitText[1], text.substring(offset));
 					break;
 

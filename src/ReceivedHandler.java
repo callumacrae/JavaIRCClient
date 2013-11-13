@@ -192,7 +192,17 @@ public class ReceivedHandler implements EventListener {
 	 */
 	@Override
 	public void messageSent(String destination, String message) {
-		content.get(destination).addElement(String.format("<%s> %s", client.getNick(), message));
+		DefaultListModel list;
+
+		if (!destination.startsWith("#") && !content.containsKey(destination)) {
+			channels.addElement(destination);
+			list = new DefaultListModel();
+			content.put(destination, list);
+		} else {
+			list = content.get(destination);
+		}
+
+		list.addElement(String.format("<%s> %s", client.getNick(), message));
 	}
 
 	/**
