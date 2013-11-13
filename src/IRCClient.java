@@ -22,9 +22,12 @@ import java.util.HashMap;
 public class IRCClient {
 	public static void main(String[] args) {
 
-		// Create the frame
+		// Create the frames
 		JFrame frame = new JFrame("IRC");
 		frame.setLayout(new BorderLayout());
+
+		Container centreFrame = new Container();
+		centreFrame.setLayout(new BorderLayout());
 
 		// Create the channels pane
 		final DefaultListModel channels = new DefaultListModel();
@@ -72,7 +75,14 @@ public class IRCClient {
 		content.put("console", console);
 		JList contentJList = new JList(console);
 		Component contentPane = new JScrollPane(contentJList);
-		frame.add(contentPane, BorderLayout.CENTER);
+		centreFrame.add(contentPane, BorderLayout.CENTER);
+
+		// Create the topic bar
+		JLabel topicBar = new JLabel("Console");
+		JScrollPane topicBarScroll = new JScrollPane(topicBar);
+		centreFrame.add(topicBarScroll, BorderLayout.NORTH);
+
+		frame.add(centreFrame, BorderLayout.CENTER);
 
 		// Create the input
 		final JTextField input = new JTextField();
@@ -87,7 +97,7 @@ public class IRCClient {
 
 		// Set up the client
 		final Client client = new Client("irc.freenode.net")
-				.addEventListener(new ReceivedHandler(channels, content, contentJList, frame))
+				.addEventListener(new ReceivedHandler(channels, content, contentJList, topicBar, frame))
 				.setUserInfo("foo-world", "callum", "Callum Macrae")
 				.setDefaultQuitMessage("Test quit message ($user$)");
 

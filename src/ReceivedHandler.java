@@ -15,12 +15,14 @@ public class ReceivedHandler implements EventListener {
 	private DefaultListModel channels;
 	private HashMap<String, DefaultListModel> content;
 	private JList contentJList;
+	private JLabel topicBar;
 	private JFrame frame;
 
-	public ReceivedHandler(DefaultListModel channels, HashMap content, JList contentJList, JFrame frame) {
+	public ReceivedHandler(DefaultListModel channels, HashMap content, JList contentJList, JLabel topicBar, JFrame frame) {
 		this.channels = channels;
 		this.content = content;
 		this.contentJList = contentJList;
+		this.topicBar = topicBar;
 		this.frame = frame;
 	}
 
@@ -94,6 +96,13 @@ public class ReceivedHandler implements EventListener {
 	@Override
 	public void channelSwitched(String channel) {
 		contentJList.setModel(content.get(channel));
+
+		String topic = null;
+		if (channel.startsWith("#")) {
+			topic = client.channels.get(channel).topic;
+		}
+
+		topicBar.setText(channel + (topic == null ? "" : ": " + topic));
 	}
 
 	/**

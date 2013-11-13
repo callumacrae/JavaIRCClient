@@ -22,8 +22,8 @@ public class Client {
 
 	// List variables
 	private List<EventListener> listeners = new ArrayList<EventListener>();
-	private HashMap<String, Channel> channels = new HashMap<String, Channel>();
-	private HashMap<String, User> users = new HashMap<String, User>();
+	public HashMap<String, Channel> channels = new HashMap<String, Channel>();
+	public HashMap<String, User> users = new HashMap<String, User>();
 	private HashMap<String, String> serverInfo = new HashMap<String, String>();
 
 	// Connection information variables
@@ -482,7 +482,7 @@ public class Client {
 
 				case N332:
 					channel = channels.get(splitLine[3]);
-					channel.topic = line.substring(line.indexOf(":", 3));
+					channel.topic = line.substring(line.indexOf(":", 3) + 1);
 					break;
 
 				case N353:
