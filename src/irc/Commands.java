@@ -7,6 +7,7 @@ public enum Commands {
 	CNF, // Special
 
 
+	CS,
 	EXIT,
 	JOIN,
 	MSG,
@@ -14,7 +15,9 @@ public enum Commands {
 	N353,
 	N366,
 	NICK,
+	NS,
 	PART,
+	PARTALL,
 	PING,
 	PRIVMSG,
 	QUERY,

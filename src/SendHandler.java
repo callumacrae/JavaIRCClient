@@ -1,4 +1,6 @@
 import irc.*;
+import irc.communicator.Channel;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -36,13 +38,22 @@ public class SendHandler implements ActionListener {
 			}
 
 			switch (switchBy) {
+				case CS:
+					client.sendMessage("ChanServ", text.substring(4));
+					break;
+
 				case JOIN:
 					client.join(splitText[1]);
 					break;
 
 				case MSG:
 				case QUERY:
-					client.sendMessage(splitText[1], text.substring(splitText[1].length() + 6));
+					int offset = splitText[0].length() + splitText[1].length() + 3;
+					client.sendMessage(splitText[1], text.substring(offset));
+					break;
+
+				case NS:
+					client.sendMessage("NickServ", text.substring(4));
 					break;
 
 				case NICK:
@@ -62,6 +73,18 @@ public class SendHandler implements ActionListener {
 					} else {
 						// /part message here
 						client.part(client.currentDestination, text.substring(6));
+					}
+					break;
+
+				case PARTALL:
+					if (splitText.length == 1) {
+						for (String channel : client.channels.keySet()) {
+							client.part(channel);
+						}
+					} else {
+						for (String channel : client.channels.keySet()) {
+							client.part(channel, text.substring(9));
+						}
 					}
 					break;
 
@@ -87,6 +110,7 @@ public class SendHandler implements ActionListener {
 				case CNF:
 				default:
 					System.out.println("Command not found: " + command);
+					client.sendRaw(text.substring(1));
 					break;
 			}
 		} else {
