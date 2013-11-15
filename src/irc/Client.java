@@ -483,6 +483,8 @@ public class Client {
 				nick += "_";
 				sendRaw("NICK " + nick);
 			}
+		} else if (line.startsWith("PING ")) {
+			sendRaw("PONG " + line.substring(5));
 		} else {
 			String[] splitLine = line.split(" ");
 
@@ -509,11 +511,6 @@ public class Client {
 			JoinedEvent joinedEvent;
 
 			switch (switchBy) {
-				case PING:
-					System.out.println("ping!");
-					sendRaw("PONG " + splitLine[1]);
-					break;
-
 				case N332:
 					channel = channels.get(splitLine[3]);
 					channel.topic = line.substring(line.indexOf(":", 3) + 1);
