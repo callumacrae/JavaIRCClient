@@ -1,5 +1,6 @@
 import irc.*;
 import irc.communicator.*;
+import irc.events.*;
 
 import javax.swing.*;
 import java.util.HashMap;
@@ -11,7 +12,6 @@ import java.util.HashMap;
  * Created: 07/11/2013 15:31
  */
 public class ReceivedHandler implements EventListener {
-	private Client client;
 	private DefaultListModel channels;
 	private HashMap<String, DefaultListModel> content;
 	private JList contentJList;
@@ -29,101 +29,89 @@ public class ReceivedHandler implements EventListener {
 	/**
 	 * Fired when an action is received from a channel.
 	 *
-	 * @param channel Channel object representing the channel.
-	 * @param user    User object of sender.
-	 * @param action The action.
+	 * @param event The event object.
 	 */
 	@Override
-	public void actionReceived(Channel channel, User user, String action) {
-		DefaultListModel channelList = content.get(channel.name);
-		channelList.addElement(String.format("* %s %s", user.nick, action));
+	public void actionReceived(ActionEvent event) {
+		DefaultListModel channelList = content.get(event.destination);
+		channelList.addElement(String.format("* %s %s", event.user.nick, event.action));
 	}
 
 	/**
 	 * Fired when an action is send to the server. Useful for logging.
 	 *
-	 * @param destination String of nick or channel name.
-	 * @param action      The action.
+	 * @param event The event object.
 	 */
 	@Override
-	public void actionSent(String destination, String action) {
-		content.get(destination).addElement(String.format("* %s %s", client.getNick(), action));
+	public void actionSent(ActionEvent event) {
+		content.get(event.destination).addElement(String.format("* %s %s", event.client.getNick(), event.action));
 	}
 
 	/**
-	 * Fired when a channel is joined (when the server sends the join stuff,
-	 * not when the user types /join).
+	 * Fired when a channel is joined by either us, or another user.
 	 *
-	 * @param channel Channel object representing the channel connected to.
+	 * @param event The event object. Contains:
+	 *              Channel event.channel the channel joined.
+	 *              User event.user The current user.
 	 */
 	@Override
-	public void channelJoined(Channel channel) {
-		channels.addElement(channel.name);
-		DefaultListModel list = new DefaultListModel();
-		list.addElement(String.format("You have joined %s", channel.name));
-		content.put(channel.name, list);
-		channel.switchTo();
-	}
+	public void channelJoined(JoinedEvent event) {
+		if (event.us) {
+			Channel channel = event.channel;
 
-	/**
-	 * Fired when another user joins a channel.
-	 *
-	 * @param channel Channel object representing the channel.
-	 * @param user    User object representing the user.
-	 */
-	@Override
-	public void channelJoined(Channel channel, User user) {
-		DefaultListModel channelList = content.get(channel.name);
-		channelList.addElement(String.format("%s has joined %s", user.nick, channel.name));
+			channels.addElement(channel.name);
+			DefaultListModel list = new DefaultListModel();
+			list.addElement(String.format("You have joined %s", channel.name));
+			content.put(channel.name, list);
+			channel.switchTo();
+		} else {
+			DefaultListModel channelList = content.get(event.channel.name);
+			channelList.addElement(String.format("%s has joined %s", event.user.nick, event.channel.name));
+		}
 	}
 
 	/**
 	 * Fired when a channel is parted (when the server sends the part stuff,
 	 * not when the user types /part).
 	 *
-	 * @param channel Channel object representing the channel.
+	 * @param event The event object.
 	 */
 	@Override
-	public void channelParted(Channel channel) {
-		channels.removeElement(channel.name);
-		content.remove(channel.name);
+	public void channelParted(PartedEvent event) {
+		if (event.us) {
+			channels.removeElement(event.channel.name);
+			content.remove(event.channel.name);
 
-		client.switchTo("console");
-	}
-
-	/**
-	 * Fired when another user parts a channel.
-	 *
-	 * @param channel     Channel object representing the channel.
-	 * @param user        User object representing the user.
-	 * @param partMessage The part message of the user (or "" if not specified).
-	 */
-	@Override
-	public void channelParted(Channel channel, User user, String partMessage) {
-		DefaultListModel channelList = content.get(channel.name);
-
-		String message;
-		if (partMessage.equals("")) {
-			message = String.format("%s has parted %s", user.nick, channel.name);
+			event.client.switchTo("console");
 		} else {
-			message = String.format("%s has parted %s (%s)", user.nick, channel.name, partMessage);
-		}
+			DefaultListModel channelList = content.get(event.channel.name);
 
-		channelList.addElement(message);
+			String message;
+			String nick = event.user.nick;
+			if (event.partMessage.equals("")) {
+				message = String.format("%s has parted %s", nick, event.channel.name);
+			} else {
+				message = String.format("%s has parted %s (%s)", nick, event.channel.name, event.partMessage);
+			}
+
+			channelList.addElement(message);
+		}
 	}
 
 	/**
 	 * Fired when the user switches channel. This shouldn't really be in the IRC package.
 	 *
-	 * @param channel String containing channel name.
+	 * @param event The event object.
 	 */
 	@Override
-	public void channelSwitched(String channel) {
+	public void channelSwitched(ChannelSwitchedEvent event) {
+		String channel = event.destination;
+
 		contentJList.setModel(content.get(channel));
 
 		String topic = null;
 		if (channel.startsWith("#")) {
-			topic = client.channels.get(channel).topic;
+			topic = event.client.channels.get(channel).topic;
 		}
 
 		topicBar.setText(channel + (topic == null ? "" : ": " + topic));
@@ -131,13 +119,10 @@ public class ReceivedHandler implements EventListener {
 
 	/**
 	 * Fired when a connection is established and user is connected.
-	 *
-	 * @param client Client object that has been connected to.
 	 */
 	@Override
-	public void connected(Client client) {
+	public void connected() {
 		System.out.println("Connected!");
-		this.client = client;
 	}
 
 	/**
@@ -145,64 +130,62 @@ public class ReceivedHandler implements EventListener {
 	 */
 	@Override
 	public void disconnected() {
+		System.out.println("Disconnected!");
 	}
 
 	/**
 	 * Fired when a line of text is received from the server.
 	 *
-	 * @param line The line that was received.
+	 * @param event The event object.
 	 */
 	@Override
-	public void lineReceived(String line) {
-//		System.out.println("Received: " + line);
+	public void lineReceived(RawEvent event) {
+//		System.out.println("Received: " + event.line);
 		DefaultListModel console = content.get("console");
-		console.addElement(line);
+		console.addElement(event.line);
 	}
 
 	/**
 	 * Fired when a line of text is sent by us to the server.
 	 *
-	 * @param line The line that was sent.
+	 * @param event The event object.
 	 */
 	@Override
-	public void lineSent(String line) {
-//		System.out.println("Sent: " + line);
+	public void lineSent(RawEvent event) {
+//		System.out.println("Sent: " + event.line);
 		DefaultListModel console = content.get("console");
-		console.addElement(line);
+		console.addElement(event.line);
 	}
 
 	/**
 	 * Fired when a PRIVMSG is received from a channel.
 	 *
-	 * @param channel Channel object representing the channel.
-	 * @param user    User object of sender.
-	 * @param message The message.
+	 * @param event The event object
 	 */
 	@Override
-	public void messageReceived(Channel channel, User user, String message) {
-		DefaultListModel channelList = content.get(channel.name);
-		channelList.addElement(String.format("<%s> %s", user.nick, message));
+	public void messageReceived(MessageEvent event) {
+		DefaultListModel channelList = content.get(event.channel.name);
+		channelList.addElement(String.format("<%s> %s", event.user.nick, event.message));
 	}
 
 	/**
 	 * Fired when a message is send to the server. Useful for logging.
 	 *
-	 * @param destination String of nick or channel name.
-	 * @param message     The message.
+	 * @param event The event object.
 	 */
 	@Override
-	public void messageSent(String destination, String message) {
+	public void messageSend(MessageEvent event) {
 		DefaultListModel list;
 
-		if (!destination.startsWith("#") && !content.containsKey(destination)) {
-			channels.addElement(destination);
+		if (!event.destination.startsWith("#") && !content.containsKey(event.destination)) {
+			channels.addElement(event.destination);
 			list = new DefaultListModel();
-			content.put(destination, list);
+			content.put(event.destination, list);
 		} else {
-			list = content.get(destination);
+			list = content.get(event.destination);
 		}
 
-		list.addElement(String.format("<%s> %s", client.getNick(), message));
+		list.addElement(String.format("<%s> %s", event.client.getNick(), event.message));
 	}
 
 	/**
@@ -210,45 +193,43 @@ public class ReceivedHandler implements EventListener {
 	 * called before the nick is changed, but this behaviour should not be
 	 * relied upon - user oldnick and newnick, not user.nick.
 	 *
-	 * @param user    User object of the user whose nick changed.
-	 * @param oldnick The old nick.
-	 * @param newnick The nick that the user changed to.
-	 * @param us      True if us.
+	 * @param event The event object.
 	 */
 	@Override
-	public void nickChanged(User user, String oldnick, String newnick, boolean us) {
+	public void nickChanged(NickChangedEvent event) {
 		String message;
-		if (us) {
-			message = String.format("You are now known as %s", newnick);
+		if (event.us) {
+			message = String.format("You are now known as %s", event.newnick);
 		} else {
-			message = String.format("%s is now known as %s", oldnick, newnick);
+			message = String.format("%s is now known as %s", event.oldnick, event.newnick);
 		}
 
-		for (Channel channel : user.channels) {
+		for (Channel channel : event.user.channels) {
 			content.get(channel.name).addElement(message);
 		}
 
-		if (content.containsKey(oldnick)) {
-			DefaultListModel convo = content.get(oldnick);
+		if (content.containsKey(event.oldnick)) {
+			DefaultListModel convo = content.get(event.oldnick);
 			convo.addElement(message);
 
-			content.remove(oldnick);
-			content.put(newnick, convo);
+			content.remove(event.oldnick);
+			content.put(event.newnick, convo);
 
-			channels.removeElement(oldnick);
-			channels.addElement(newnick);
+			channels.removeElement(event.oldnick);
+			channels.addElement(event.newnick);
 		}
 	}
 
 	/**
 	 * Fired when an action is received in a query from a user.
 	 *
-	 * @param user    User object of sender.
-	 * @param action The action.
+	 * @param event The event object.
 	 */
 	@Override
-	public void queryActionReceived(User user, String action) {
+	public void queryActionReceived(ActionEvent event) {
 		DefaultListModel query;
+		User user = event.user;
+
 		if (content.containsKey(user.nick)) {
 			query = content.get(user.nick);
 		} else {
@@ -257,7 +238,7 @@ public class ReceivedHandler implements EventListener {
 			content.put(user.nick, query);
 		}
 
-		query.addElement(String.format("* %s %s", user.nick, action));
+		query.addElement(String.format("* %s %s", user.nick, event.action));
 
 		user.switchTo();
 	}
@@ -265,12 +246,13 @@ public class ReceivedHandler implements EventListener {
 	/**
 	 * Fired when a PRIVMSG is received from a user.
 	 *
-	 * @param user    User object of sender.
-	 * @param message The message.
+	 * @param event The event object.
 	 */
 	@Override
-	public void queryReceived(User user, String message) {
+	public void queryReceived(MessageEvent event) {
 		DefaultListModel query;
+		User user = event.user;
+
 		if (content.containsKey(user.nick)) {
 			query = content.get(user.nick);
 		} else {
@@ -279,7 +261,7 @@ public class ReceivedHandler implements EventListener {
 			content.put(user.nick, query);
 		}
 
-		query.addElement(String.format("<%s> %s", user.nick, message));
+		query.addElement(String.format("<%s> %s", user.nick, event.message));
 
 		user.switchTo();
 	}
@@ -287,34 +269,26 @@ public class ReceivedHandler implements EventListener {
 	/**
 	 * Fired when a user quits. It is called after userQuitPerChannel.
 	 *
-	 * @param user    User object of user who just quit.
-	 * @param message Quit message (or "" if not specified).
+	 * @param event The event object.
 	 */
 	@Override
-	public void userQuit(User user, String message) {
-		if (content.containsKey(user.nick)) {
-			content.remove(user.nick);
-			channels.removeElement(user.nick);
+	public void userQuit(QuitEvent event) {
+		if (content.containsKey(event.user.nick)) {
+			content.remove(event.user.nick);
+			channels.removeElement(event.user.nick);
 		}
-	}
 
-	/**
-	 * Fired for each channel a user is in when the user quits. Is called before userQuit.
-	 *
-	 * @param user    User object of user who just quit.
-	 * @param channel Channel object of channel user was in.
-	 * @param message Quit message (or "" if not specified).
-	 */
-	@Override
-	public void userQuitPerChannel(User user, Channel channel, String message) {
-		DefaultListModel channelList = content.get(channel.name);
+		String message = event.quitMessage;
 
 		if (message.equals("")) {
-			message = String.format("%s has parted %s", user.nick, channel.name);
+			message = String.format("%s has quit", event.user.nick);
 		} else {
-			message = String.format("%s has parted %s (%s)", user.nick, channel.name, message);
+			message = String.format("%s has quit (%s)", event.user.nick, message);
 		}
 
-		channelList.addElement(message);
+		for (Channel channel : event.user.channels) {
+			DefaultListModel channelList = content.get(channel.name);
+			channelList.addElement(message);
+		}
 	}
 }

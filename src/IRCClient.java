@@ -97,9 +97,10 @@ public class IRCClient {
 
 		// Set up the client
 		final Client client = new Client("irc.freenode.net")
-				.addEventListener(new ReceivedHandler(channels, content, contentJList, topicBar, frame))
 				.setUserInfo("foo-world", "callum", "Callum Macrae")
 				.setDefaultQuitMessage("Test quit message ($user$)");
+
+		client.events.addListener(new ReceivedHandler(channels, content, contentJList, topicBar, frame));
 
 		// Connect
 		try {

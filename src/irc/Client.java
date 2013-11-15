@@ -1,11 +1,10 @@
 package irc;
 import irc.communicator.*;
+import irc.events.*;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * An IRC library.
@@ -21,7 +20,6 @@ public class Client {
 	private BufferedReader bin;
 
 	// List variables
-	private List<EventListener> listeners = new ArrayList<EventListener>();
 	public HashMap<String, Channel> channels = new HashMap<String, Channel>();
 	public HashMap<String, User> users = new HashMap<String, User>();
 	private HashMap<String, String> serverInfo = new HashMap<String, String>();
@@ -39,6 +37,8 @@ public class Client {
 	// Miscellaneous variables
 	private boolean connected = false;
 	public String currentDestination;
+
+	public Events events = new Events();
 
 	/**
 	 * Server info is specified on object creation with optional port.
@@ -58,19 +58,6 @@ public class Client {
 	public Client(String host, int port) {
 		this.host = host;
 		this.port = port;
-	}
-
-	/**
-	 * Adds an event listener containing the methods defined in the
-	 * IRCEventListener class.
-	 *
-	 * @param listener The event listener.
-	 * @return Returns itself to allow method chaining.
-	 */
-	public Client addEventListener(EventListener listener) {
-		listeners.add(listener);
-
-		return this;
 	}
 
 	/**
@@ -268,9 +255,7 @@ public class Client {
 		}
 
 		// Fire disconnected event
-		for (EventListener listener : listeners) {
-			listener.disconnected();
-		}
+		events.fire("disconnected");
 
 		return this;
 	}
@@ -309,10 +294,12 @@ public class Client {
 	public Client sendAction(String destination, String action) {
 		sendRaw(String.format("PRIVMSG %s :\u0001ACTION %s\u0001", destination, action));
 
-		// Fire actionSent event
-		for (EventListener listener : listeners) {
-			listener.actionSent(destination, action);
-		}
+		ActionEvent event = new ActionEvent(this);
+		event.user = users.get(nick);
+		event.destination = destination;
+		event.action = action;
+
+		events.fire("actionSent", event);
 
 		return this;
 	}
@@ -349,11 +336,16 @@ public class Client {
 	 * @return Returns itself to allow method chaining.
 	 */
 	public Client sendMessage(String destination, String message) {
-		sendRaw(String.format("PRIVMSG %s :%s", destination, message));
+		// Fire messageSend event
+		MessageEvent event = new MessageEvent(this);
+		event.destination = destination;
+		event.message = message;
+		event.user = users.get(nick);
+		event.us = true;
+		events.fire("messageSend", event);
 
-		// Fire messageSent event
-		for (EventListener listener : listeners) {
-			listener.messageSent(destination, message);
+		if (!event.sendCancelled()) {
+			sendRaw(String.format("PRIVMSG %s :%s", destination, message));
 		}
 
 		return this;
@@ -371,9 +363,9 @@ public class Client {
 		pout.flush();
 
 		// Fire lineSent event
-		for (EventListener listener : listeners) {
-			listener.lineSent(line);
-		}
+		RawEvent rawEvent = new RawEvent(this);
+		rawEvent.line = line;
+		events.fire("lineSent", rawEvent);
 
 		return this;
 	}
@@ -437,10 +429,9 @@ public class Client {
 	public Client switchTo(String destination) {
 		this.currentDestination = destination;
 
-		// Fire channelSwitched event
-		for (EventListener listener : listeners) {
-			listener.channelSwitched(destination);
-		}
+		ChannelSwitchedEvent event = new ChannelSwitchedEvent(this);
+		event.destination = destination;
+		events.fire("channelSwitched", event);
 
 		return this;
 	}
@@ -464,9 +455,7 @@ public class Client {
 				users.put(nick, you);
 
 				// Fire connected event
-				for (EventListener listener : listeners) {
-					listener.connected(this);
-				}
+				events.fire("connected");
 
 			// Get server info
 			} else if (line.contains("005")) {
@@ -517,8 +506,11 @@ public class Client {
 
 			Channel channel;
 			User user;
+			JoinedEvent joinedEvent;
+
 			switch (switchBy) {
 				case PING:
+					System.out.println("ping!");
 					sendRaw("PONG " + splitLine[1]);
 					break;
 
@@ -566,9 +558,11 @@ public class Client {
 					user.channels.add(channel);
 
 					// Fire channelJoined event
-					for (EventListener listener : listeners) {
-						listener.channelJoined(channel);
-					}
+					joinedEvent = new JoinedEvent(this);
+					joinedEvent.channel = channel;
+					joinedEvent.user = user;
+					joinedEvent.us = true;
+					events.fire("channelJoined", joinedEvent);
 					break;
 
 				case JOIN:
@@ -584,9 +578,11 @@ public class Client {
 					user.channels.add(channel);
 
 					// Fire channelJoined event
-					for (EventListener listener : listeners) {
-						listener.channelJoined(channel, user);
-					}
+					joinedEvent = new JoinedEvent(this);
+					joinedEvent.channel = channel;
+					joinedEvent.user = user;
+					joinedEvent.us = false;
+					events.fire("channelJoined", joinedEvent);
 					break;
 
 				case NICK:
@@ -598,10 +594,13 @@ public class Client {
 						nick = newnick;
 					}
 
-					// Fire channelJoined event. Warning, fired BEFORE user.nick change.
-					for (EventListener listener : listeners) {
-						listener.nickChanged(user, user.nick, newnick, nick.equals(newnick));
-					}
+					// Fire nickChanged event. Warning, fired BEFORE user.nick change.
+					NickChangedEvent nickChangedEvent = new NickChangedEvent(this);
+					nickChangedEvent.user = user;
+					nickChangedEvent.oldnick = user.nick;
+					nickChangedEvent.newnick = newnick;
+					nickChangedEvent.us = nick.equals(newnick);
+					events.fire("nickChanged", nickChangedEvent);
 
 					users.remove(user.nick);
 					users.put(newnick, user);
@@ -616,22 +615,20 @@ public class Client {
 					user.channels.remove(channel);
 
 					// Fire channelParted event
-					if (user.nick.equals(nick)) {
+					PartedEvent partedEvent = new PartedEvent(this);
+					partedEvent.user = user;
+					partedEvent.channel = channel;
+					partedEvent.partMessage = "";
+					partedEvent.us = user.nick.equals(nick);
+
+					if (partedEvent.us) {
 						channel.joined = false;
-
-						for (EventListener listener : listeners) {
-							listener.channelParted(channel);
-						}
-					} else {
-						String partMessage = "";
-						if (line.contains("PART " + splitLine[2] + " :")) {
-							partMessage = line.substring(splitLine[0].length() + splitLine[2].length() + 8);
-						}
-
-						for (EventListener listener : listeners) {
-							listener.channelParted(channel, user, partMessage);
-						}
+					} else if (line.contains("PART " + splitLine[2] + " :")) {
+						int offset = splitLine[0].length() + splitLine[2].length() + 8;
+						partedEvent.partMessage = line.substring(offset);
 					}
+
+					events.fire("channelParted", partedEvent);
 
 					break;
 
@@ -646,14 +643,20 @@ public class Client {
 							message = message.substring(8, message.length() - 1);
 
 							// Fire queryActionReceived event
-							for (EventListener listener : listeners) {
-								listener.queryActionReceived(user, message);
-							}
+							ActionEvent event = new ActionEvent(this);
+							event.user = user;
+							event.destination = user.nick;
+							event.action = message;
+
+							events.fire("queryActionReceived", event);
 						} else {
 							// Fire queryReceived event
-							for (EventListener listener : listeners) {
-								listener.queryReceived(user, message);
-							}
+							MessageEvent event = new MessageEvent(this);
+							event.user = user;
+							event.destination = user.nick;
+							event.message = message;
+
+							events.fire("queryReceived", event);
 						}
 					} else {
 						channel = channels.get(channelName);
@@ -663,14 +666,21 @@ public class Client {
 							message = message.substring(8, message.length() - 1);
 
 							// Fire actionReceived event
-							for (EventListener listener : listeners) {
-								listener.actionReceived(channel, user, message);
-							}
+							ActionEvent event = new ActionEvent(this);
+							event.user = user;
+							event.destination = channel.name;
+							event.action = message;
+
+							events.fire("actionReceived", event);
 						} else {
 							// Fire messageReceived event
-							for (EventListener listener : listeners) {
-								listener.messageReceived(channel, user, message);
-							}
+							MessageEvent event = new MessageEvent(this);
+							event.channel = channel;
+							event.user = user;
+							event.destination = user.nick;
+							event.message = message;
+
+							events.fire("messageReceived", event);
 						}
 					}
 					break;
@@ -684,22 +694,21 @@ public class Client {
 
 					String quitMessage = "";
 					if (line.contains("QUIT :")) {
-						quitMessage = line.substring(splitLine[0].length() + splitLine[2].length() + 8);
+						quitMessage = line.substring(splitLine[0].length() + splitLine[2].length() + 7);
 					}
 
 					for (Channel chan : user.channels) {
 						chan.users.remove(user);
-
-						// Fire userQuitPerChannel event
-						for (EventListener listener : listeners) {
-							listener.userQuitPerChannel(user, chan, quitMessage);
-						}
 					}
 
-					// Fire userQuit event
-					for (EventListener listener : listeners) {
-						listener.userQuit(user, quitMessage);
-					}
+					QuitEvent quitEvent = new QuitEvent(this);
+					quitEvent.user = user;
+					quitEvent.quitMessage = quitMessage;
+					events.fire("userQuit", quitEvent);
+
+					// Remove user object
+					users.remove(user.nick);
+
 					break;
 
 				default:
@@ -708,9 +717,9 @@ public class Client {
 		}
 
 		// Fire lineReceived event
-		for (EventListener listener : listeners) {
-			listener.lineReceived(line);
-		}
+		RawEvent rawEvent = new RawEvent(this);
+		rawEvent.line = line;
+		events.fire("lineReceived", rawEvent);
 
 		return this;
 	}
