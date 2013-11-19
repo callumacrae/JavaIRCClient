@@ -3,6 +3,9 @@ import irc.communicator.*;
 import irc.events.*;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 /**
@@ -16,13 +19,15 @@ public class ReceivedHandler implements EventListener {
 	private HashMap<String, DefaultListModel> content;
 	private JList contentJList;
 	private JLabel topicBar;
+	private DefaultListModel namesList;
 	private JFrame frame;
 
-	public ReceivedHandler(DefaultListModel channels, HashMap content, JList contentJList, JLabel topicBar, JFrame frame) {
+	public ReceivedHandler(DefaultListModel channels, HashMap content, JList contentJList, JLabel topicBar, DefaultListModel namesList, JFrame frame) {
 		this.channels = channels;
 		this.content = content;
 		this.contentJList = contentJList;
 		this.topicBar = topicBar;
+		this.namesList = namesList;
 		this.frame = frame;
 	}
 
@@ -67,6 +72,7 @@ public class ReceivedHandler implements EventListener {
 		} else {
 			DefaultListModel channelList = content.get(event.channel.name);
 			channelList.addElement(String.format("%s has joined %s", event.user.nick, event.channel.name));
+			updateNamesList(event.current);
 		}
 	}
 
@@ -95,6 +101,8 @@ public class ReceivedHandler implements EventListener {
 			}
 
 			channelList.addElement(message);
+
+			updateNamesList(event.current);
 		}
 	}
 
@@ -115,6 +123,12 @@ public class ReceivedHandler implements EventListener {
 		}
 
 		topicBar.setText(channel + (topic == null ? "" : ": " + topic));
+
+		if (event.current != null) {
+			updateNamesList(event.current);
+		} else {
+			namesList.clear();
+		}
 	}
 
 	/**
@@ -218,6 +232,8 @@ public class ReceivedHandler implements EventListener {
 			channels.removeElement(event.oldnick);
 			channels.addElement(event.newnick);
 		}
+
+		updateNamesList(event.current);
 	}
 
 	/**
@@ -289,6 +305,64 @@ public class ReceivedHandler implements EventListener {
 		for (Channel channel : event.user.channels) {
 			DefaultListModel channelList = content.get(channel.name);
 			channelList.addElement(message);
+		}
+
+		updateNamesList(event.current);
+	}
+
+	/**
+	 * Shortcut method to update the list of names using the Channel object.
+	 *
+	 * @param current A Channel object.
+	 */
+	private void updateNamesList(Communicator current) {
+		if (current instanceof Channel) {
+			updateNamesList(((Channel) current).nickList);
+		}
+	}
+
+	/**
+	 * Updates the list of names.
+	 *
+	 * @param names An ArrayList of channel names.
+	 */
+	private void updateNamesList(ArrayList<String> names) {
+		Collections.sort(names, new Comparator<String>() {
+			@Override
+			public int compare(String name1, String name2) {
+				if (name1.startsWith("@")) {
+					if (name2.startsWith("@")) {
+						return name1.compareToIgnoreCase(name2);
+					}
+
+					return -1;
+				}
+
+				if (name1.startsWith("+")) {
+					if (name2.startsWith("@")) {
+						return 1;
+					}
+
+					if (name2.startsWith("+")) {
+						return name1.compareToIgnoreCase(name2);
+					}
+
+					return -1;
+				}
+
+				if (name2.startsWith("@") || name2.startsWith("+")) {
+					return 1;
+				}
+
+				return name1.compareToIgnoreCase(name2);
+			}
+		});
+
+		namesList.clear();
+		for (String name : names) {
+			if (!name.equals("")) {
+				namesList.addElement(name);
+			}
 		}
 	}
 }

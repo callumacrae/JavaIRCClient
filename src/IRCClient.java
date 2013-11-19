@@ -1,5 +1,4 @@
 import irc.*;
-import irc.communicator.Channel;
 
 import javax.swing.*;
 import javax.swing.event.ListDataEvent;
@@ -80,7 +79,15 @@ public class IRCClient {
 		// Create the topic bar
 		JLabel topicBar = new JLabel("Console");
 		JScrollPane topicBarScroll = new JScrollPane(topicBar);
+		topicBarScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		centreFrame.add(topicBarScroll, BorderLayout.NORTH);
+
+		// Create the names list
+		DefaultListModel names = new DefaultListModel();
+		JList namesJList = new JList(names);
+		Component namesPane = new JScrollPane(namesJList);
+		namesPane.setPreferredSize(new Dimension(150, 0));
+		centreFrame.add(namesPane, BorderLayout.EAST);
 
 		frame.add(centreFrame, BorderLayout.CENTER);
 
@@ -100,7 +107,9 @@ public class IRCClient {
 				.setUserInfo("foo-world", "callum", "Callum Macrae")
 				.setDefaultQuitMessage("Test quit message ($user$)");
 
-		client.events.addListener(new ReceivedHandler(channels, content, contentJList, topicBar, frame));
+		client.currentDestination = "console";
+
+		client.events.addListener(new ReceivedHandler(channels, content, contentJList, topicBar, names, frame));
 
 		// Connect
 		try {

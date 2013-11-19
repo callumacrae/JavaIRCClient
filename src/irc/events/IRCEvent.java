@@ -1,6 +1,7 @@
 package irc.events;
 
 import irc.Client;
+import irc.communicator.Communicator;
 
 /**
  * Base IRCEvent. All IRC event classes should extend from this one.
@@ -10,8 +11,23 @@ import irc.Client;
  */
 public class IRCEvent {
 	public Client client;
+	public Communicator current;
 
 	public IRCEvent(Client client) {
 		this.client = client;
+		
+		String destination = client.currentDestination;
+
+		if (destination == null) {
+			return;
+		}
+
+		if (destination.equalsIgnoreCase("console")) {
+			current = null;
+		} else if (destination.startsWith("#")) {
+			current = client.channels.get(destination);
+		} else {
+			current = client.users.get(destination);
+		}
 	}
 }

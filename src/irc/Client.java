@@ -444,7 +444,7 @@ public class Client {
 	 * @return Returns itself to allow method chaining.
 	 * @throws IRCException Rarely throws this; just on nick already taken.
 	 */
-	private Client handleNewLine(String line) throws IRCException {
+	synchronized private Client handleNewLine(String line) throws IRCException {
 		if (!connected) {
 			// Connected
 			if (line.contains("004")) {
@@ -518,15 +518,12 @@ public class Client {
 
 				case N353:
 					channel = channels.get(splitLine[4]);
-					String[] nicks = line.substring(line.indexOf(":", 3)).split(" ");
+					String partLine = line.substring(line.indexOf(":", 3));
+					String[] nicks = partLine.substring(partLine.indexOf(" ")).split(" ");
 
 					for (String nick : nicks) {
-						char priv = ' ';
-
 						// Nick "@callumacrae" separates to '@' and "callumacrae" (defaults to ' ')
-						// @todo: Reimplement this
 						if (nick.matches("^[@+]")) {
-							priv = nick.charAt(0);
 							nick = nick.substring(1);
 						}
 
@@ -543,6 +540,7 @@ public class Client {
 
 						user.channels.add(channel);
 						channel.users.add(user);
+						channel.nickList.add(nick);
 					}
 					break;
 
@@ -552,6 +550,7 @@ public class Client {
 					channel.joined = true;
 
 					channel.users.add(user);
+					channel.nickList.add(nick);
 					user.channels.add(channel);
 
 					// Fire channelJoined event
@@ -572,6 +571,7 @@ public class Client {
 					}
 
 					channel.users.add(user);
+					channel.nickList.add(user.nick);
 					user.channels.add(channel);
 
 					// Fire channelJoined event
@@ -599,9 +599,23 @@ public class Client {
 					nickChangedEvent.us = nick.equals(newnick);
 					events.fire("nickChanged", nickChangedEvent);
 
+					for (Channel chan : user.channels) {
+						if (chan.nickList.contains(user.nick)) {
+							chan.nickList.remove(user.nick);
+							chan.nickList.add(newnick);
+						} else if (chan.nickList.contains("+" + user.nick)) {
+							chan.nickList.remove("+" + user.nick);
+							chan.nickList.add("+" + newnick);
+						} else if (chan.nickList.contains("@" + user.nick)) {
+							chan.nickList.remove("@" + user.nick);
+							chan.nickList.add("@" + newnick);
+						}
+					}
+
 					users.remove(user.nick);
 					users.put(newnick, user);
 					user.nick = newnick;
+
 					break;
 
 				case PART:
@@ -610,6 +624,11 @@ public class Client {
 
 					channel.users.remove(user);
 					user.channels.remove(channel);
+
+					// Remove all three... who cares?
+					channel.nickList.remove(user.nick);
+					channel.nickList.remove("+" + user.nick);
+					channel.nickList.remove("@" + user.nick);
 
 					// Fire channelParted event
 					PartedEvent partedEvent = new PartedEvent(this);
@@ -696,6 +715,11 @@ public class Client {
 
 					for (Channel chan : user.channels) {
 						chan.users.remove(user);
+
+						// Remove all three... who cares?
+						chan.nickList.remove(user.nick);
+						chan.nickList.remove("+" + user.nick);
+						chan.nickList.remove("@" + user.nick);
 					}
 
 					QuitEvent quitEvent = new QuitEvent(this);

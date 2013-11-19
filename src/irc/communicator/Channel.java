@@ -10,6 +10,7 @@ public class Channel extends Communicator {
 	public String topic;
 	public String name;
 	public ArrayList<User> users = new ArrayList<User>();
+	public ArrayList<String> nickList = new ArrayList<String>(); // Includes @ and +
 
 	public boolean joined = false;
 
