@@ -38,33 +38,32 @@ public class IRCClient {
 
 		// Reorder channel list on contents change
 		channels.addListDataListener(new ListDataListener() {
-			public boolean running = false;
+			private boolean running = false;
 
-			@Override
-			public void intervalAdded(ListDataEvent listDataEvent) {
+			/**
+			 * Sort the channels. DRYs the code.
+			 */
+			private void sortChannels() {
 				if (!running) {
 					running = true;
 					sortChannelList(channels);
 					running = false;
 				}
+			}
+
+			@Override
+			public void intervalAdded(ListDataEvent listDataEvent) {
+				sortChannels();
 			}
 
 			@Override
 			public void intervalRemoved(ListDataEvent listDataEvent) {
-				if (!running) {
-					running = true;
-					sortChannelList(channels);
-					running = false;
-				}
+				sortChannels();
 			}
 
 			@Override
 			public void contentsChanged(ListDataEvent listDataEvent) {
-				if (!running) {
-					running = true;
-					sortChannelList(channels);
-					running = false;
-				}
+				sortChannels();
 			}
 		});
 
